@@ -1,0 +1,2213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Harrow 1000S · Supersport Concept</title>
+<meta name="description" content="An original supersport motorcycle concept in interactive 3D. Take it apart and explore every part.">
+<meta name="theme-color" content="#07090d">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect width=%2216%22 height=%2216%22 rx=%223%22 fill=%22%232f5dff%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07090d;
+  --bg-2: #0c1119;
+  --ink: #e9edf4;
+  --ink-2: #b9c2d2;
+  --muted: #7f8aa0;
+  --line: rgba(150, 175, 230, 0.16);
+  --line-strong: rgba(150, 175, 230, 0.32);
+  --glass: rgba(9, 13, 21, 0.66);
+  --glass-strong: rgba(9, 13, 21, 0.86);
+  --blue: #2f5dff;
+  --blue-soft: #7d9bff;
+  --gold: #e6aa4c;
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --ease: cubic-bezier(.65, 0, .35, 1);
+  --gutter: 24px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--ink); }
+body { font: 400 14px/1.55 var(--sans); -webkit-font-smoothing: antialiased; overscroll-behavior: none; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+#stage { position: fixed; inset: 0; }
+#stage canvas { display: block; width: 100%; height: 100%; outline: none; }
+#stage canvas.pointer { cursor: pointer; }
+
+#ui { position: fixed; inset: 0; pointer-events: none; }
+#ui > * { pointer-events: auto; }
+
+/* ---------- top bar ---------- */
+.topbar {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 18px var(--gutter);
+  pointer-events: none;
+}
+.topbar > * { pointer-events: auto; }
+.brand { display: flex; align-items: baseline; gap: 10px; text-decoration: none; color: var(--ink); }
+.brand b { font: 700 24px/1 var(--display); letter-spacing: .18em; text-transform: uppercase; }
+.brand b i { font-style: normal; color: var(--blue); margin-left: .06em; }
+.brand span { font: 500 11px/1 var(--mono); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+.actions { display: flex; gap: 8px; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 38px; padding: 0 16px; border-radius: 999px;
+  border: 1px solid var(--line-strong); background: var(--glass);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  font: 600 13px/1 var(--display); letter-spacing: .12em; text-transform: uppercase;
+  transition: background .2s, border-color .2s, color .2s;
+}
+.btn:hover { border-color: var(--blue-soft); }
+.btn svg { width: 15px; height: 15px; flex: none; }
+.btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+.btn.primary:hover { background: #4670ff; }
+.btn.ghost { background: transparent; }
+.btn[aria-expanded="true"] { border-color: var(--gold); color: var(--gold); }
+
+/* ---------- panels ---------- */
+.panel {
+  position: absolute;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2); backdrop-filter: blur(18px) saturate(1.2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  transition: transform .45s var(--ease), opacity .35s var(--ease), visibility 0s linear .45s;
+}
+.panel.is-open { transition: transform .45s var(--ease), opacity .35s var(--ease), visibility 0s; }
+.eyebrow { font: 500 11px/1.3 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+.eyebrow .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--blue); margin-right: 8px; vertical-align: 1px; }
+
+/* info panel (showcase) */
+#info {
+  left: var(--gutter); top: 88px; width: 360px; max-width: calc(100vw - 2 * var(--gutter));
+  padding: 26px 26px 22px;
+  background: linear-gradient(180deg, rgba(9,13,21,.72), rgba(9,13,21,.5));
+}
+#info h1 { font: 700 64px/.9 var(--display); letter-spacing: .01em; text-transform: uppercase; margin: 0 0 14px; }
+#info h1 em { font-style: normal; color: var(--blue-soft); }
+#info .tagline { color: var(--ink-2); margin: 0 0 20px; max-width: 32ch; }
+.specs { margin: 0; display: grid; grid-template-columns: auto 1fr; border-top: 1px solid var(--line); }
+.specs dt, .specs dd { margin: 0; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.specs dt { font: 500 11px/1.5 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding-right: 16px; }
+.specs dd { color: var(--ink); font-size: 13px; }
+.specs .num { font-family: var(--mono); font-size: 12.5px; color: var(--ink); }
+.hint {
+  display: flex; align-items: center; gap: 10px; margin: 18px 0 0; color: var(--gold);
+  font: 600 13px/1.2 var(--display); letter-spacing: .14em; text-transform: uppercase;
+}
+.hint .pulse { position: relative; width: 10px; height: 10px; border-radius: 50%; background: var(--gold); flex: none; }
+.hint .pulse::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 1px solid var(--gold); animation: pulse 1.8s var(--ease) infinite; }
+@keyframes pulse { from { transform: scale(.4); opacity: 1; } to { transform: scale(1.4); opacity: 0; } }
+body:not([data-state="showcase"]) #info { transform: translateX(calc(-100% - 40px)); opacity: 0; visibility: hidden; }
+
+/* explode bar */
+#explodeBar {
+  left: 50%; bottom: 22px; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 14px;
+  padding: 10px 12px 10px 18px; border-radius: 999px;
+  width: min(560px, calc(100vw - 2 * var(--gutter)));
+}
+#explodeBar label { font: 600 12px/1 var(--display); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); white-space: nowrap; }
+#explodeBar output { font: 500 12px/1 var(--mono); color: var(--ink); min-width: 4ch; text-align: right; }
+#explode { flex: 1; min-width: 60px; appearance: none; -webkit-appearance: none; height: 28px; background: transparent; }
+#explode::-webkit-slider-runnable-track { height: 3px; border-radius: 3px; background: linear-gradient(90deg, var(--blue) var(--fill, 0%), rgba(150,175,230,.22) var(--fill, 0%)); }
+#explode::-moz-range-track { height: 3px; border-radius: 3px; background: rgba(150,175,230,.22); }
+#explode::-moz-range-progress { height: 3px; border-radius: 3px; background: var(--blue); }
+#explode::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -7.5px; border-radius: 50%; background: var(--ink); border: 3px solid var(--blue); }
+#explode::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--ink); border: 3px solid var(--blue); }
+#explodeBar .btn { height: 32px; padding: 0 12px; }
+
+/* detail panel */
+#detail {
+  right: var(--gutter); top: 88px; bottom: 22px; width: 400px; max-width: calc(100vw - 2 * var(--gutter));
+  display: flex; flex-direction: column;
+  transform: translateX(calc(100% + 40px)); opacity: 0; visibility: hidden;
+  background: var(--glass-strong);
+}
+#detail.is-open { transform: none; opacity: 1; visibility: visible; }
+.detail-head { position: relative; padding: 24px 56px 18px 26px; border-bottom: 1px solid var(--line); }
+.detail-head h2 { font: 700 38px/.95 var(--display); text-transform: uppercase; letter-spacing: .01em; margin: 0; outline: none; }
+.detail-head .sys { color: var(--blue-soft); }
+.icon-btn {
+  position: absolute; top: 16px; right: 16px; width: 34px; height: 34px; border-radius: 50%;
+  border: 1px solid var(--line-strong); background: transparent; display: grid; place-items: center;
+}
+.icon-btn:hover { border-color: var(--blue-soft); }
+.icon-btn svg { width: 14px; height: 14px; }
+.detail-body { padding: 6px 26px 26px; overflow-y: auto; flex: 1; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+.facts { display: grid; grid-template-columns: auto 1fr; margin: 12px 0 4px; }
+.facts dt, .facts dd { margin: 0; padding: 7px 0; border-bottom: 1px solid var(--line); }
+.facts dt { font: 500 11px/1.6 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding-right: 16px; }
+.facts dd { font-size: 13px; }
+.detail-body h3 { font: 600 13px/1 var(--display); letter-spacing: .16em; text-transform: uppercase; color: var(--gold); margin: 22px 0 8px; }
+.detail-body p { margin: 0; color: var(--ink-2); }
+.links { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.links button {
+  border: 1px solid var(--line-strong); background: rgba(47,93,255,.08); border-radius: 999px;
+  padding: 6px 12px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;
+}
+.links button:hover { border-color: var(--blue-soft); background: rgba(47,93,255,.2); }
+.links button svg { width: 11px; height: 11px; opacity: .7; }
+.fact { margin: 24px 0 0; padding: 14px 16px; border-left: 2px solid var(--gold); background: rgba(230,170,76,.07); border-radius: 0 8px 8px 0; }
+.fact b { display: block; font: 600 12px/1 var(--display); letter-spacing: .16em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+.fact p { color: var(--ink); }
+.detail-foot { display: flex; gap: 8px; padding: 14px 26px; border-top: 1px solid var(--line); }
+.detail-foot .btn { height: 34px; }
+
+/* parts list */
+#parts {
+  left: var(--gutter); top: 88px; bottom: 22px; width: 340px; max-width: calc(100vw - 2 * var(--gutter));
+  display: flex; flex-direction: column;
+  transform: translateX(calc(-100% - 40px)); opacity: 0; visibility: hidden;
+  background: var(--glass-strong); z-index: 2;
+}
+#parts.is-open { transform: none; opacity: 1; visibility: visible; }
+.parts-head { position: relative; padding: 20px 20px 14px; border-bottom: 1px solid var(--line); }
+.parts-head h2 { font: 700 26px/1 var(--display); text-transform: uppercase; letter-spacing: .04em; margin: 0 0 12px; }
+.parts-head h2 small { font: 500 12px/1 var(--mono); color: var(--muted); letter-spacing: .04em; margin-left: 6px; }
+.search { position: relative; }
+.search svg { position: absolute; left: 12px; top: 50%; width: 14px; height: 14px; transform: translateY(-50%); opacity: .6; }
+#partSearch {
+  width: 100%; height: 38px; padding: 0 12px 0 34px; border-radius: 10px;
+  border: 1px solid var(--line-strong); background: rgba(0,0,0,.3);
+}
+#partSearch::placeholder { color: var(--muted); }
+.parts-list { overflow-y: auto; flex: 1; padding: 4px 8px 16px; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+.parts-list section h3 {
+  position: sticky; top: 0; margin: 0; padding: 12px 12px 6px; background: linear-gradient(var(--glass-strong) 70%, transparent);
+  font: 600 12px/1 var(--display); letter-spacing: .16em; text-transform: uppercase; color: var(--gold);
+  display: flex; justify-content: space-between;
+}
+.parts-list section h3 span { font: 500 11px/1 var(--mono); color: var(--muted); letter-spacing: 0; }
+.parts-list ul { list-style: none; margin: 0; padding: 0; }
+.parts-list li button {
+  display: block; width: 100%; text-align: left; padding: 7px 12px; border: 0; border-radius: 8px; background: transparent;
+  color: var(--ink-2); font-size: 13px;
+}
+.parts-list li button:hover { background: rgba(47,93,255,.14); color: var(--ink); }
+.parts-list li button[aria-current="true"] { background: rgba(47,93,255,.28); color: #fff; }
+.parts-empty { padding: 24px 12px; color: var(--muted); }
+
+/* exploded-view part labels */
+#labels { position: fixed; inset: 0; pointer-events: none; opacity: 0; transition: opacity .3s; }
+#labels.show { opacity: 1; }
+#labels svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+#labels line { stroke: rgba(160, 185, 240, .5); stroke-width: 1; }
+#labels circle { fill: var(--gold); }
+.plabel {
+  position: absolute; left: 0; top: 0; pointer-events: auto; will-change: transform, opacity;
+  padding: 5px 9px; border-radius: 6px; border: 1px solid var(--line-strong);
+  background: rgba(9, 13, 21, .74); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  font: 600 11.5px/1 var(--display); letter-spacing: .12em; text-transform: uppercase; color: var(--ink); white-space: nowrap;
+}
+.plabel:hover { border-color: var(--blue-soft); color: #fff; background: rgba(47, 93, 255, .35); }
+.plabel[hidden] { display: none; }
+#labelsBtn[aria-pressed="false"] { color: var(--muted); }
+
+/* mouse controls hint */
+#navHint {
+  position: fixed; right: var(--gutter); bottom: 32px; margin: 0; pointer-events: none; text-align: right;
+  font: 500 11px/1.4 var(--mono); letter-spacing: .06em; color: var(--muted); transition: opacity .3s;
+}
+#navHint span { display: block; }
+#navHint b { color: var(--ink-2); font-weight: 500; }
+body[data-selected] #navHint { opacity: 0; }
+body.dragging, body.dragging * { -webkit-user-select: none; user-select: none; }
+@media (max-height: 820px) { body[data-state="showcase"] #navHint { opacity: 0; } }
+@media (max-width: 1280px), (hover: none) { #navHint { display: none; } }
+
+/* tooltip */
+#tooltip {
+  position: fixed; left: 0; top: 0; pointer-events: none; z-index: 5;
+  padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line-strong);
+  background: var(--glass-strong); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  font-size: 13px; white-space: nowrap; opacity: 0; transition: opacity .15s;
+}
+#tooltip.show { opacity: 1; }
+#tooltip small { display: block; font: 500 10.5px/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--blue-soft); }
+
+/* loader & error */
+#loader {
+  position: fixed; inset: 0; z-index: 10; display: grid; place-items: center;
+  background: radial-gradient(ellipse at 50% 60%, #0d1422 0%, var(--bg) 70%);
+  transition: opacity .6s var(--ease), visibility 0s linear .6s;
+}
+#loader.done { opacity: 0; visibility: hidden; }
+.load-box { width: min(320px, calc(100vw - 48px)); text-align: center; }
+.load-box .brand { justify-content: center; margin-bottom: 26px; }
+.load-track { height: 2px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.load-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--blue), var(--blue-soft)); transition: width .2s; }
+.load-meta { display: flex; justify-content: space-between; margin-top: 10px; font: 500 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+#loadPct { color: var(--ink); }
+#errorBox { display: none; text-align: left; margin-top: 8px; }
+#loader.error .load-track, #loader.error .load-meta { display: none; }
+#loader.error #errorBox { display: block; }
+#errorBox h2 { font: 700 26px/1 var(--display); text-transform: uppercase; margin: 0 0 10px; color: var(--gold); }
+#errorBox p { color: var(--ink-2); margin: 0 0 10px; }
+#errorBox code { font: 12px/1.5 var(--mono); background: rgba(255,255,255,.06); padding: 2px 6px; border-radius: 4px; color: var(--ink); }
+#errorBox .err-detail { font: 11px/1.5 var(--mono); color: var(--muted); word-break: break-word; }
+
+/* ---------- phones: panels become bottom sheets ---------- */
+@media (max-width: 720px) {
+  :root { --gutter: 16px; }
+  .topbar { padding: 12px var(--gutter); }
+  .brand b { font-size: 20px; }
+  .brand span { display: none; }
+  .btn { height: 36px; padding: 0 13px; font-size: 12px; }
+  .btn .lbl-long { display: none; }
+
+  #info.sheet, #detail.sheet, #parts.sheet {
+    left: 0; right: 0; bottom: 0; top: auto; width: auto; max-width: none;
+    border-radius: 18px 18px 0 0; border-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .panel.sheet::before {
+    z-index: 1;
+    content: ""; position: absolute; top: 8px; left: 50%; width: 36px; height: 4px; margin-left: -18px;
+    border-radius: 4px; background: var(--line-strong);
+  }
+  #info { padding: 22px 18px 16px; max-height: 44vh; overflow-y: auto; }
+  #info h1 { font-size: 40px; margin-bottom: 6px; }
+  #info .tagline { font-size: 13px; margin-bottom: 12px; }
+  .specs { grid-template-columns: 1fr 1fr; column-gap: 14px; }
+  .specs dt, .specs dd { padding: 0; border: 0; }
+  .specs .row { padding: 7px 0; border-bottom: 1px solid var(--line); }
+  .specs dt { font-size: 10px; }
+  .specs dd { font-size: 12px; line-height: 1.35; }
+  .hint { margin-top: 12px; }
+  body:not([data-state="showcase"]) #info { transform: translateY(calc(100% + 20px)); }
+
+  #detail { max-height: 60vh; transform: translateY(calc(100% + 20px)); }
+  #detail.is-open { transform: none; }
+  .detail-head { padding: 22px 52px 12px 18px; }
+  .detail-head h2 { font-size: 30px; }
+  .detail-body { padding: 0 18px 20px; }
+  .detail-foot { padding: 10px 18px; }
+
+  #parts { max-height: 72vh; height: 72vh; transform: translateY(calc(100% + 20px)); }
+  #parts.is-open { transform: none; }
+
+  #explodeBar { bottom: calc(14px + env(safe-area-inset-bottom)); padding: 8px 8px 8px 14px; gap: 10px; }
+  #explodeBar .btn:not(#labelsBtn) { display: none; }
+  .plabel { font-size: 10px; padding: 4px 7px; }
+  body[data-state="showcase"] #explodeBar,
+  body[data-selected] #explodeBar,
+  body[data-parts-open] #explodeBar { opacity: 0; visibility: hidden; transform: translateX(-50%) translateY(20px); }
+  #tooltip { display: none; }
+}
+@media (min-width: 721px) {
+  /* desktop: specs rows are transparent wrappers */
+  .specs .row { display: contents; }
+  body[data-selected] #explodeBar { transform: translateX(calc(-50% - 210px)); }
+  body[data-state="showcase"] #explodeBar .btn { display: none; }
+}
+@media (min-width: 721px) and (max-width: 1100px) {
+  #info { width: 320px; }
+  #info h1 { font-size: 52px; }
+  #detail { width: 360px; }
+  body[data-selected] #explodeBar { width: min(420px, calc(100vw - 440px)); transform: translateX(calc(-50% - 190px)); }
+}
+@media (hover: none) { .hint .mouse { display: none; } }
+@media (hover: hover) { .hint .touch { display: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0s !important; animation: none !important; }
+}
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body data-state="loading">
+
+<div id="stage"></div>
+
+<div id="labels" aria-hidden="true"><svg></svg></div>
+
+<div id="ui">
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Harrow 1000S, back to top">
+      <b>Harrow<i>/</i></b><span>1000S · supersport concept</span>
+    </a>
+    <div class="actions">
+      <button class="btn" id="partsBtn" type="button" aria-expanded="false" aria-controls="parts">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 4h12M2 8h12M2 12h8"/></svg>
+        <span>Parts<span class="lbl-long"> list</span></span>
+      </button>
+      <button class="btn primary" id="toggleBtn" type="button">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M8 1v4M8 11v4M1 8h4M11 8h4"/></svg>
+        <span id="toggleLbl">Disassemble</span>
+      </button>
+    </div>
+  </header>
+
+  <aside id="info" class="panel sheet is-open" aria-labelledby="bikeName">
+    <p class="eyebrow"><span class="dot"></span>Original concept · Supersport</p>
+    <h1 id="bikeName">Harrow <em>1000S</em></h1>
+    <p class="tagline">A litre-class superbike designed from the frame out. All 173 parts come apart, and every one of them tells you what it does.</p>
+    <dl class="specs">
+      <div class="row"><dt>Engine</dt><dd>Liquid-cooled inline four, <span class="num">30°</span> inclined cylinders</dd></div>
+      <div class="row"><dt>Frame</dt><dd>Aluminium twin-spar</dd></div>
+      <div class="row"><dt>Geometry</dt><dd><span class="num">24°</span> rake · <span class="num">1,405 mm</span> wheelbase</dd></div>
+      <div class="row"><dt>Tyres</dt><dd><span class="num">120/70 ZR17</span> front · <span class="num">190/55 ZR17</span> rear</dd></div>
+      <div class="row"><dt>Brakes</dt><dd>Twin <span class="num">320 mm</span> front discs · <span class="num">220 mm</span> rear</dd></div>
+      <div class="row"><dt>Final drive</dt><dd><span class="num">520</span> chain</dd></div>
+    </dl>
+    <p class="hint"><span class="pulse" aria-hidden="true"></span><span class="mouse">Click the bike to take it apart</span><span class="touch">Tap the bike to take it apart</span></p>
+  </aside>
+
+  <div id="explodeBar" class="panel is-open" role="group" aria-label="Explode view">
+    <label for="explode">Apart</label>
+    <input id="explode" type="range" min="0" max="100" step="1" value="0" aria-valuetext="0% apart">
+    <output id="explodeOut" for="explode">0%</output>
+    <button class="btn ghost" type="button" id="labelsBtn" aria-pressed="true" title="Show part labels in the exploded view">Labels</button>
+    <button class="btn ghost" type="button" data-action="reassemble">Reassemble</button>
+  </div>
+
+  <aside id="parts" class="panel sheet" aria-label="Parts list" aria-hidden="true">
+    <div class="parts-head">
+      <h2>Parts <small id="partsCount"></small></h2>
+      <div class="search">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14"/></svg>
+        <input id="partSearch" type="search" placeholder="Search parts, systems, materials" aria-label="Search parts" autocomplete="off">
+      </div>
+      <button class="icon-btn" type="button" id="partsClose" aria-label="Close parts list">
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 2l10 10M12 2 2 12"/></svg>
+      </button>
+    </div>
+    <div class="parts-list" id="partsList"></div>
+  </aside>
+
+  <aside id="detail" class="panel sheet" aria-labelledby="detailName" aria-hidden="true">
+    <div class="detail-head">
+      <p class="eyebrow"><span class="dot"></span><span class="sys" id="detailSys"></span></p>
+      <h2 id="detailName" tabindex="-1"></h2>
+      <button class="icon-btn" type="button" id="detailClose" aria-label="Close part details">
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 2l10 10M12 2 2 12"/></svg>
+      </button>
+    </div>
+    <div class="detail-body" id="detailBody"></div>
+    <div class="detail-foot">
+      <button class="btn ghost" type="button" id="detailBack">All parts</button>
+      <button class="btn ghost" type="button" data-action="reassemble">Reassemble</button>
+    </div>
+  </aside>
+</div>
+
+<p id="navHint" aria-hidden="true"><span><b>Drag</b> rotate, any angle</span><span><b>Right-drag</b> pan</span><span><b>Scroll</b> zoom to pointer</span><span><b>Double-click</b> background to reset</span></p>
+<div id="tooltip" role="presentation"></div>
+<div id="live" class="sr-only" aria-live="polite"></div>
+
+<div id="loader" role="status" aria-live="polite">
+  <div class="load-box">
+    <div class="brand"><b>Harrow<i>/</i></b></div>
+    <div class="load-track"><div class="load-fill" id="loadFill"></div></div>
+    <div class="load-meta"><span id="loadMsg">Loading model</span><span id="loadPct">0%</span></div>
+    <div id="errorBox">
+      <h2>Couldn’t load the bike</h2>
+      <p id="errorMsg"></p>
+      <p class="err-detail" id="errorDetail"></p>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+/* =====================================================================
+   PART DATA
+   Edit descriptions here. Keys are Blender object names with the _L/_R
+   side and any trailing index removed ("FrontDisc_L" -> "FrontDisc",
+   "Exhaust_Header3" -> "Exhaust_Header"). A key with a side ("Lever_L")
+   overrides the shared entry for that one object. connectsTo lists keys
+   of neighbouring parts; a paired key resolves to the same side.
+   ===================================================================== */
+const BODY = 'Bodywork', CHAS = 'Chassis & suspension', ENG = 'Engine & cooling',
+      EXH = 'Exhaust', WHB = 'Wheels & brakes', DRV = 'Drivetrain', CTL = 'Controls';
+
+const PARTS = {
+  /* ---------- Bodywork ---------- */
+  Fairing_Nose: { displayName: 'Nose fairing', system: BODY, material: 'Moulded ABS, metallic racing blue with clear coat',
+    whatItIs: 'The upper front fairing: the pointed nose that wraps around the headlights and the ram-air intake.',
+    function: 'It is the first thing the air hits. Its shape splits the airflow cleanly around the bike and up over the rider, holds the headlights, and funnels high-pressure air into the ram-air duct.',
+    connectsTo: ['Windscreen', 'Headlight', 'RamAirDuct', 'Fairing_Side'],
+    fact: 'Aerodynamic drag rises with the square of speed, so near top speed most of the engine’s power goes into pushing air aside. That’s why the nose and screen are shaped so carefully.' },
+  Fairing_Side: { displayName: 'Side fairing', system: BODY, material: 'Moulded ABS, metallic racing blue with white swoosh, clear coat',
+    whatItIs: 'The large side panel that carries the white livery swoosh along the flank of the bike.',
+    function: 'It smooths the airflow along the side of the bike, covers the radiator and frame, and steers hot air from the radiator out and away from the rider’s legs.',
+    connectsTo: ['Fairing_Nose', 'Fairing_Lower', 'Fairing_Vent', 'Radiator_Core'] },
+  Fairing_Lower: { displayName: 'Lower fairing', system: BODY, material: 'Moulded ABS, metallic blue with black lower edge',
+    whatItIs: 'The lower side panel that covers the bottom of the engine and the exhaust headers.',
+    function: 'It closes off the lower half of the bike so air flows past cleanly, protects the engine from stones and spray, and guides hot air from the radiator down and out.',
+    connectsTo: ['Fairing_Side', 'BellyPan', 'Exhaust_Header', 'Radiator_Core'] },
+  Fairing_Vent: { displayName: 'Fairing vent', system: BODY, material: 'Textured black plastic',
+    whatItIs: 'One of the louvred vent strakes set into the side fairing.',
+    function: 'The radiator heats the air that passes through it, and that air needs a way out. These vents let it escape so it doesn’t build up pressure behind the fairing or cook the rider.',
+    connectsTo: ['Fairing_Side', 'Radiator_Core'] },
+  BellyPan: { displayName: 'Belly pan', system: BODY, material: 'Moulded ABS, painted, black underside',
+    whatItIs: 'The pan under the engine that joins the two lower fairings.',
+    function: 'It tidies the airflow underneath the bike and shields the sump and exhaust collector. On track it doubles as a tray that catches oil or coolant if the engine lets go.',
+    connectsTo: ['Fairing_Lower', 'Exhaust_Collector', 'Engine_Sump'],
+    fact: 'Many racing rulebooks require the lower fairing to hold at least half of the engine’s oil and coolant, so a failing engine doesn’t dump fluid on the racing line.' },
+  Headlight: { displayName: 'Headlight', system: BODY, material: 'LED projector module',
+    whatItIs: 'One of the twin LED headlight units in the nose.',
+    function: 'It lights the road ahead at night and makes the bike visible. LEDs run cool, draw little power and switch instantly between dipped and main beam.',
+    connectsTo: ['HeadlightLens', 'DRL', 'Fairing_Nose'] },
+  HeadlightLens: { displayName: 'Headlight lens', system: BODY, material: 'Polycarbonate, gloss black surround',
+    whatItIs: 'The clear, shaped cover over each headlight.',
+    function: 'It seals the lamp against rain, dust and stones while following the shape of the nose so the fairing stays smooth.',
+    connectsTo: ['Headlight', 'Fairing_Nose'] },
+  DRL: { displayName: 'Daytime running light', system: BODY, material: 'LED light guide',
+    whatItIs: 'The thin LED light strip above each headlight.',
+    function: 'It stays on whenever the bike is running so other drivers notice it in daylight. Motorcycles are small and easy to overlook, and a distinctive light helps.',
+    connectsTo: ['Headlight', 'Fairing_Nose'] },
+  Windscreen: { displayName: 'Windscreen', system: BODY, material: 'Smoke-tinted polycarbonate',
+    whatItIs: 'The tinted screen above the nose fairing.',
+    function: 'When the rider tucks down behind it, it throws the wind blast over their helmet. That cuts fatigue and drag at speed.',
+    connectsTo: ['Fairing_Nose', 'InnerCowl', 'Dash'],
+    fact: 'Screens are polycarbonate rather than glass or acrylic because it flexes and cracks instead of shattering into sharp pieces in a crash.' },
+  InnerCowl: { displayName: 'Inner cowl', system: BODY, material: 'Textured black plastic',
+    whatItIs: 'The inside panel behind the nose fairing that the rider sees from the seat.',
+    function: 'It hides the wiring, fairing stay and ram-air duct, and frames the dashboard so the cockpit looks clean.',
+    connectsTo: ['Fairing_Nose', 'Dash', 'RamAirDuct'] },
+  RamAirDuct: { displayName: 'Ram-air duct', system: BODY, material: 'Moulded black plastic',
+    whatItIs: 'The intake duct that runs from the slot in the nose back to the airbox.',
+    function: 'It collects the high-pressure air at the front of the moving bike and feeds it straight to the airbox, so the engine breathes cool, dense air.',
+    connectsTo: ['Fairing_Nose', 'Airbox', 'InnerCowl'],
+    fact: 'At high speed ram air slightly pressurises the airbox, which adds a few percent of power, and more as speed rises.' },
+  Dash: { displayName: 'Dashboard housing', system: BODY, material: 'Textured black plastic',
+    whatItIs: 'The housing that holds the instrument display behind the windscreen.',
+    function: 'It keeps the display in the rider’s line of sight, shaded from glare and sealed against the weather.',
+    connectsTo: ['Dash_Screen', 'InnerCowl', 'Windscreen'] },
+  Dash_Screen: { displayName: 'TFT display', system: BODY, material: 'Anti-glare glass over TFT panel',
+    whatItIs: 'The colour screen inside the dashboard.',
+    function: 'It shows speed, revs, gear position, riding mode, lap times and warnings, and it’s where the rider sets traction control and other electronics.',
+    connectsTo: ['Dash', 'Switchgear'] },
+  MirrorHousing: { displayName: 'Mirror housing', system: BODY, material: 'Textured black plastic',
+    whatItIs: 'The aerodynamic shell of the rear-view mirror.',
+    function: 'It holds the mirror glass steady at speed and is shaped to add as little drag and buffeting as possible.',
+    connectsTo: ['MirrorGlass', 'MirrorStalk'] },
+  MirrorGlass: { displayName: 'Mirror glass', system: BODY, material: 'Convex mirrored glass',
+    whatItIs: 'The reflective glass in each mirror.',
+    function: 'It shows the rider what’s behind them. It’s slightly convex, which widens the field of view at the cost of making objects look further away.',
+    connectsTo: ['MirrorHousing'] },
+  MirrorStalk: { displayName: 'Mirror stalk', system: BODY, material: 'Textured black plastic',
+    whatItIs: 'The arm that mounts the mirror to the fairing.',
+    function: 'It places the mirror far enough out that the rider sees past their own shoulders, and it can fold if knocked.',
+    connectsTo: ['MirrorHousing', 'Fairing_Nose'] },
+  FuelTank: { displayName: 'Fuel tank', system: BODY, material: 'Pressed steel, metallic racing blue with clear coat',
+    whatItIs: 'The fuel tank between the rider’s knees, with the white livery band across it.',
+    function: 'It carries the fuel. Its sculpted sides give the rider something to grip with their knees under hard braking and in corners, which keeps their weight off the handlebars.',
+    connectsTo: ['FuelCap', 'TankFrontCover', 'Seat', 'FrameSpar'] },
+  FuelCap: { displayName: 'Fuel cap', system: BODY, material: 'Machined aluminium',
+    whatItIs: 'The flush-fitting, locking filler cap on top of the tank.',
+    function: 'It seals the tank. A vent lets air in as fuel is used, and a rollover valve stops fuel leaking if the bike goes down.',
+    connectsTo: ['FuelTank'] },
+  TankFrontCover: { displayName: 'Airbox cover', system: BODY, material: 'Textured black plastic',
+    whatItIs: 'The cover in front of the fuel tank, sitting over the airbox.',
+    function: 'It closes the gap between the tank and the fairing and lifts off to give access to the air filter without removing the tank.',
+    connectsTo: ['FuelTank', 'Airbox', 'Fairing_Side'] },
+  Seat: { displayName: 'Rider seat', system: BODY, material: 'Grippy synthetic leather over firm foam',
+    whatItIs: 'The rider’s seat.',
+    function: 'It supports the rider while letting them slide their weight across the bike in corners. The grippy cover stops them sliding back under acceleration.',
+    connectsTo: ['TailCowl', 'FuelTank', 'SubFrame_Top'] },
+  TailCowl: { displayName: 'Tail cowl', system: BODY, material: 'Moulded ABS, metallic blue with white top panel',
+    whatItIs: 'The pointed tail section behind the seat, with the white panel on top.',
+    function: 'It encloses the rear subframe and electrics and gives the air a clean edge to leave the bike, which reduces turbulence behind the rider.',
+    connectsTo: ['Seat', 'TailLight', 'SideCover', 'Undertail'] },
+  SideCover: { displayName: 'Side cover', system: BODY, material: 'Moulded ABS, metallic racing blue',
+    whatItIs: 'The painted panel under the front of the seat, between the tank and the tail.',
+    function: 'It covers the joint between the main frame and subframe and hides the battery and wiring underneath.',
+    connectsTo: ['FuelTank', 'TailCowl', 'SubFrame_Low'] },
+  TailLight: { displayName: 'Tail light', system: BODY, material: 'Red LED array',
+    whatItIs: 'The LED tail and brake light at the back of the tail cowl.',
+    function: 'It glows red whenever the lights are on and brightens sharply when either brake is used, warning traffic behind.',
+    connectsTo: ['TailCowl', 'Undertail'] },
+  Undertail: { displayName: 'Undertail', system: BODY, material: 'Textured black plastic',
+    whatItIs: 'The panel that closes off the underside of the tail cowl.',
+    function: 'It keeps road spray out of the tail electrics and carries the licence plate hanger.',
+    connectsTo: ['TailCowl', 'PlateHanger', 'TailLight'] },
+  Undertray: { displayName: 'Undertray', system: BODY, material: 'Textured black plastic',
+    whatItIs: 'The inner tray under the seat, above the rear shock.',
+    function: 'It acts as an inner mudguard, shielding the battery, ECU and wiring from water and grit thrown up by the rear tyre.',
+    connectsTo: ['Battery_Box', 'SubFrame_Low', 'Shock_Reservoir'] },
+  PlateHanger: { displayName: 'Licence plate hanger', system: BODY, material: 'Textured black plastic',
+    whatItIs: 'The bracket that hangs the number plate and rear indicators below the tail.',
+    function: 'It holds the plate, indicators and plate light where the law needs them, and on track it unbolts completely.',
+    connectsTo: ['LicensePlate', 'Indicator_Stalk', 'Undertail'] },
+  LicensePlate: { displayName: 'Licence plate', system: BODY, material: 'Pressed aluminium plate',
+    whatItIs: 'The registration plate, left blank on this concept.',
+    function: 'It identifies the bike on public roads. It mounts to the hanger, well clear of the rear tyre.',
+    connectsTo: ['PlateHanger'] },
+  Indicator: { displayName: 'Rear indicator', system: BODY, material: 'Amber LED lens',
+    whatItIs: 'An amber LED turn signal at the rear.',
+    function: 'It flashes to show which way the rider is about to turn or change lanes.',
+    connectsTo: ['Indicator_Stalk', 'PlateHanger'] },
+  Indicator_Stalk: { displayName: 'Indicator stalk', system: BODY, material: 'Flexible black rubber',
+    whatItIs: 'The short arm that holds each rear indicator.',
+    function: 'It positions the indicator out to the side where drivers can see it. It’s flexible, so it bends rather than snapping off if the bike tips over.',
+    connectsTo: ['Indicator', 'PlateHanger'] },
+  FrontFender: { displayName: 'Front mudguard', system: BODY, material: 'Moulded ABS, metallic racing blue',
+    whatItIs: 'The mudguard that hugs the top of the front tyre.',
+    function: 'It stops the front tyre flinging water, grit and stones at the radiator, engine and fork seals.',
+    connectsTo: ['Fork_AxleClamp', 'FrontWheel_Tire', 'Fork_Stanchion'] },
+  RearHugger: { displayName: 'Rear hugger', system: BODY, material: 'Clear-coated carbon fibre',
+    whatItIs: 'The carbon mudguard that sits close over the rear tyre, mounted on the swingarm.',
+    function: 'Because it moves with the swingarm it can sit very close to the tyre, keeping spray and chain lube off the shock and the rider.',
+    connectsTo: ['Swingarm', 'RearWheel_Tire', 'ChainGuard'] },
+
+  /* ---------- Chassis & suspension ---------- */
+  FrameSpar: { displayName: 'Frame spar', system: CHAS, material: 'Cast and extruded aluminium, dark satin',
+    whatItIs: 'One of the two big aluminium beams of the twin-spar frame, running from the steering head back around the engine to the swingarm pivot.',
+    function: 'This is the backbone of the bike. The two spars carry the loads between the front and rear wheels, locate the engine, and hold the steering and swingarm pivot in exactly the right places.',
+    connectsTo: ['SteeringHead', 'SwingarmPivotBolt', 'FrameCrossMember', 'FrameDown'],
+    fact: 'A race frame isn’t built to be as stiff as possible. Engineers tune a little sideways flex into it because at full lean the suspension works at an angle, and the frame then acts as extra suspension.' },
+  FrameDown: { displayName: 'Frame down-member', system: CHAS, material: 'Aluminium, dark satin',
+    whatItIs: 'The front leg of the frame that drops from the steering head to the front engine mounts.',
+    function: 'It bolts to the front of the engine so the engine itself becomes part of the chassis structure. That stiffens the frame without adding weight.',
+    connectsTo: ['SteeringHead', 'FrameSpar', 'Engine_Head'] },
+  SteeringHead: { displayName: 'Steering head', system: CHAS, material: 'Cast aluminium, dark satin',
+    whatItIs: 'The cast tube at the front of the frame where the two spars meet.',
+    function: 'It holds the steering bearings that the whole front end turns on. Its angle sets the bike’s 24° rake, which largely decides how fast it steers and how stable it feels.',
+    connectsTo: ['FrameSpar', 'TripleClamp_Top', 'TripleClamp_Bottom', 'SteeringStemNut'] },
+  FrameCrossMember: { displayName: 'Frame cross-member', system: CHAS, material: 'Cast aluminium, dark satin',
+    whatItIs: 'The cast brace that ties the two frame spars together behind the engine.',
+    function: 'It stops the spars twisting apart and provides the top mount for the rear shock, so the rear suspension has a solid point to push against.',
+    connectsTo: ['FrameSpar', 'Shock_Body', 'SubFrame_Low'] },
+  SwingarmPivotBolt: { displayName: 'Swingarm pivot', system: CHAS, material: 'Machined steel shaft, polished caps',
+    whatItIs: 'The shaft that passes through the frame and the front of the swingarm.',
+    function: 'The swingarm rotates around this axis. Its height relative to the chain line affects how the rear squats or lifts when the rider opens the throttle.',
+    connectsTo: ['FrameSpar', 'Swingarm', 'Engine_Crankcase'] },
+  SubFrame_Top: { displayName: 'Subframe upper rail', system: CHAS, material: 'Black anodised aluminium',
+    whatItIs: 'The upper tube of the rear subframe that bolts to the back of the main frame.',
+    function: 'It carries the seat, tail bodywork and electrics. The subframe is a separate bolt-on part, so a crash that bends it is a cheap fix.',
+    connectsTo: ['SubFrame_Low', 'Seat', 'TailCowl', 'FrameSpar'] },
+  SubFrame_Low: { displayName: 'Subframe lower rail', system: CHAS, material: 'Black anodised aluminium',
+    whatItIs: 'The lower, diagonal tube of the rear subframe.',
+    function: 'It braces the upper rail from below, forming a triangle so the subframe can carry a rider, a passenger and luggage without sagging.',
+    connectsTo: ['SubFrame_Top', 'FrameCrossMember', 'PillionHanger', 'Battery_Box'] },
+  Battery_Box: { displayName: 'Battery box', system: CHAS, material: 'Moulded black plastic',
+    whatItIs: 'The tray under the seat that holds the battery and electronics.',
+    function: 'It keeps the battery, ECU and fuse box secure, dry and close to the bike’s centre of mass.',
+    connectsTo: ['SubFrame_Low', 'Undertray', 'Seat'] },
+  Swingarm: { displayName: 'Swingarm', system: CHAS, material: 'Cast and welded aluminium, dark satin',
+    whatItIs: 'One side of the aluminium swingarm, the fork that holds the rear wheel.',
+    function: 'It pivots on the frame behind the engine, holds the rear axle, and lets the rear wheel move up and down against the rear shock. It also sets chain alignment through the adjusters at its ends.',
+    connectsTo: ['SwingarmPivotBolt', 'RearWheel_Axle', 'ChainAdjuster', 'Shock_Body'],
+    fact: 'The swingarm has to resist twisting as well as bending. Under hard acceleration the chain pulls on one side only, trying to skew the rear wheel out of line.' },
+  Swingarm_Brace: { displayName: 'Swingarm brace', system: CHAS, material: 'Aluminium, dark satin',
+    whatItIs: 'The cross brace that joins the two swingarm arms near the pivot.',
+    function: 'It ties the arms into one stiff unit and carries the lower mount for the rear shock linkage.',
+    connectsTo: ['Swingarm', 'Shock_Body'] },
+  Swingarm_Truss: { displayName: 'Swingarm truss', system: CHAS, material: 'Aluminium, dark satin',
+    whatItIs: 'The under-bracing beneath the right-hand swingarm arm.',
+    function: 'It adds depth to the arm where the exhaust leaves little room, making it much stiffer for very little extra weight.',
+    connectsTo: ['Swingarm', 'Swingarm_Brace'] },
+  ChainAdjuster: { displayName: 'Chain adjuster', system: CHAS, material: 'Machined aluminium',
+    whatItIs: 'The adjuster block at the back end of each swingarm arm that the rear axle passes through.',
+    function: 'Screwing the adjusters slides the axle back to take up chain slack. Both sides must match exactly, or the rear wheel points slightly off line and wears the chain and tyre.',
+    connectsTo: ['Swingarm', 'RearWheel_Axle', 'Chain'] },
+  ChainGuard: { displayName: 'Chain guard', system: CHAS, material: 'Textured black plastic',
+    whatItIs: 'The guard over the top run of the chain on the swingarm.',
+    function: 'It keeps trouser legs, boots and fingers away from the moving chain and sprocket, and catches flung lube.',
+    connectsTo: ['Swingarm', 'Chain', 'RearHugger'] },
+  Shock_Body: { displayName: 'Rear shock damper', system: CHAS, material: 'Black anodised aluminium body',
+    whatItIs: 'The body of the single rear shock absorber, mounted upright in front of the rear wheel.',
+    function: 'Inside, oil is forced through small valves as the wheel moves. That controls how fast the suspension compresses and rebounds, so the tyre stays pressed to the road instead of bouncing.',
+    connectsTo: ['Shock_Spring', 'Shock_Reservoir', 'FrameCrossMember', 'Swingarm_Brace'] },
+  Shock_Spring: { displayName: 'Rear shock spring', system: CHAS, material: 'Chrome-silicon spring steel, yellow powder coat',
+    whatItIs: 'The coil spring wrapped around the rear shock.',
+    function: 'It holds up the back of the bike and absorbs bumps. Adjusting its preload changes the ride height to suit the rider’s weight or a passenger.',
+    connectsTo: ['Shock_Body', 'Shock_Reservoir'] },
+  Shock_Reservoir: { displayName: 'Shock reservoir', system: CHAS, material: 'Gold anodised aluminium',
+    whatItIs: 'The piggyback canister attached to the rear shock.',
+    function: 'It holds extra oil and a pressurised nitrogen charge. The pressure stops the oil foaming when it gets hot, so the damping stays consistent to the end of a fast ride.',
+    connectsTo: ['Shock_Body', 'Shock_Spring'] },
+  TripleClamp_Top: { displayName: 'Top triple clamp', system: CHAS, material: 'Machined aluminium, dark satin',
+    whatItIs: 'The upper yoke that clamps both fork legs to the steering stem.',
+    function: 'Together with the bottom clamp it holds the forks parallel and sets how far they sit ahead of the steering axis (the offset), which combines with rake to give the bike its stability.',
+    connectsTo: ['Fork_Outer', 'SteeringStemNut', 'SteeringHead', 'ClipOn_Collar'] },
+  TripleClamp_Bottom: { displayName: 'Bottom triple clamp', system: CHAS, material: 'Forged aluminium, dark satin',
+    whatItIs: 'The lower yoke, carrying the steering stem that runs up through the steering head.',
+    function: 'It takes most of the braking loads from the forks and turns on the lower steering bearing.',
+    connectsTo: ['Fork_Outer', 'SteeringHead', 'TripleClamp_Top'] },
+  SteeringStemNut: { displayName: 'Steering stem nut', system: CHAS, material: 'Polished aluminium',
+    whatItIs: 'The large nut on top of the steering stem, in the centre of the top clamp.',
+    function: 'It holds the front end together and sets the steering bearing preload: tight enough to have no play, but loose enough that the bars swing freely.',
+    connectsTo: ['TripleClamp_Top', 'SteeringHead'] },
+  Fork_Outer: { displayName: 'Fork outer tube', system: CHAS, material: 'Gold anodised aluminium',
+    whatItIs: 'The large gold outer tube of the upside-down front fork.',
+    function: 'On an upside-down fork the larger outer tubes sit at the top, clamped in the triple clamps, which makes the front end stiffer. The fork carries the front wheel, provides the suspension travel and sets the 24° steering geometry.',
+    connectsTo: ['TripleClamp_Top', 'TripleClamp_Bottom', 'Fork_Stanchion', 'Fork_Cap'],
+    fact: 'The fork is upside-down so the fattest, strongest tube sits where the bending loads are highest. It also puts the heavy tube above the springs, which reduces unsprung weight.' },
+  Fork_Stanchion: { displayName: 'Fork inner tube', system: CHAS, material: 'Steel with DLC (diamond-like carbon) coating',
+    whatItIs: 'The inner fork tube that slides up into the gold outer tube.',
+    function: 'It moves up and down with the wheel as the fork compresses. Its dark, very hard coating is slippery, so it glides smoothly over small bumps.',
+    connectsTo: ['Fork_Outer', 'Fork_Seal', 'Fork_AxleClamp'],
+    fact: 'The DLC coating cuts “stiction”, the extra force needed to start the fork moving, so the fork reacts to tiny ripples instead of skipping over them.' },
+  Fork_Seal: { displayName: 'Fork seal', system: CHAS, material: 'Rubber seal and dust wiper',
+    whatItIs: 'The seal and wiper at the bottom of each outer tube.',
+    function: 'It keeps the fork oil in and wipes dirt and bug debris off the inner tube before it can get inside.',
+    connectsTo: ['Fork_Outer', 'Fork_Stanchion'] },
+  Fork_Cap: { displayName: 'Fork top cap', system: CHAS, material: 'Blue anodised aluminium',
+    whatItIs: 'The cap that closes the top of each fork leg.',
+    function: 'It seals the fork, holds the spring in place, and houses the adjusters.',
+    connectsTo: ['Fork_Outer', 'Fork_Adjuster'] },
+  Fork_Adjuster: { displayName: 'Fork adjuster', system: CHAS, material: 'Gold anodised aluminium',
+    whatItIs: 'The adjuster screw on top of each fork cap.',
+    function: 'With a spanner or screwdriver, the rider can change spring preload and damping without taking the fork apart. That’s how the bike is set up for a heavier rider, a bumpy road or a smooth track.',
+    connectsTo: ['Fork_Cap', 'Fork_Outer'] },
+  Fork_AxleClamp: { displayName: 'Fork axle clamp', system: CHAS, material: 'Black anodised aluminium',
+    whatItIs: 'The foot at the bottom of each inner tube.',
+    function: 'It clamps the front axle and carries the radial mounts for the brake caliper, so the braking force goes straight into the fork.',
+    connectsTo: ['Fork_Stanchion', 'FrontWheel_Axle', 'FrontCaliper', 'FrontFender'] },
+
+  /* ---------- Engine & cooling ---------- */
+  Engine_Crankcase: { displayName: 'Crankcase', system: ENG, material: 'Cast aluminium, black finish',
+    whatItIs: 'The lower main casting of the engine, which holds the crankshaft and the gearbox.',
+    function: 'The crankshaft turns the pistons’ up-and-down motion into rotation, and the gearbox shares the same case. It also bolts to the frame as a structural part of the chassis.',
+    connectsTo: ['Engine_Block', 'Engine_Sump', 'Engine_ClutchCover', 'SwingarmPivotBolt'] },
+  Engine_Block: { displayName: 'Cylinder block', system: ENG, material: 'Cast aluminium, black finish',
+    whatItIs: 'The block containing the four cylinders, tilted forward by 30°.',
+    function: 'The pistons run in these bores. Fuel and air burn above them and push them down to turn the crank. Coolant flows through passages around the bores to carry the heat away.',
+    connectsTo: ['Engine_Crankcase', 'Engine_Head', 'Hose_RadLower'],
+    fact: 'Tilting the cylinders forward moves weight towards the front wheel and leaves room for a straight, short path from the airbox down into the engine.' },
+  Engine_Head: { displayName: 'Cylinder head', system: ENG, material: 'Cast aluminium, dark satin',
+    whatItIs: 'The cylinder head on top of the block, with 16 valves driven by two camshafts.',
+    function: 'It forms the top of each combustion chamber, and its valves open and close to let the fresh mixture in and the burnt gas out, thousands of times a minute.',
+    connectsTo: ['Engine_Block', 'Engine_CamCover', 'Exhaust_Header', 'Airbox'] },
+  Engine_CamCover: { displayName: 'Cam cover', system: ENG, material: 'Magnesium alloy, satin',
+    whatItIs: 'The lid on top of the cylinder head.',
+    function: 'It seals in the oil that lubricates the camshafts and valves. Making it from magnesium saves weight at the highest point of the engine.',
+    connectsTo: ['Engine_Head', 'Engine_CoilCap'] },
+  Engine_CoilCap: { displayName: 'Ignition coil', system: ENG, material: 'Moulded black plastic',
+    whatItIs: 'The cap of a pencil ignition coil sitting directly on one cylinder’s spark plug.',
+    function: 'It turns the battery’s 12 volts into the tens of thousands of volts needed for a spark, and fires the plug at exactly the right moment.',
+    connectsTo: ['Engine_CamCover', 'Engine_Head'] },
+  Engine_Sump: { displayName: 'Oil sump', system: ENG, material: 'Cast aluminium, black finish',
+    whatItIs: 'The oil pan bolted to the bottom of the crankcase.',
+    function: 'It holds the engine oil. The pump draws oil from here and sends it to the bearings, cams and gearbox, then it drains back down.',
+    connectsTo: ['Engine_Crankcase', 'Engine_OilFilter', 'BellyPan'] },
+  Engine_OilFilter: { displayName: 'Oil filter', system: ENG, material: 'Steel canister, black',
+    whatItIs: 'The spin-on oil filter at the front of the crankcase.',
+    function: 'All the oil passes through its paper element, which traps metal particles and grit before they can wear the bearings.',
+    connectsTo: ['Engine_Crankcase', 'Engine_Sump'] },
+  Engine_ClutchCover: { displayName: 'Clutch cover', system: ENG, material: 'Magnesium alloy, satin',
+    whatItIs: 'The round cover on the right side of the engine, over the clutch.',
+    function: 'It encloses the oil-bathed clutch, the stack of plates that connects the engine to the gearbox and lets the rider pull away and change gear.',
+    connectsTo: ['Engine_Crankcase', 'Lever_L', 'Engine_CoverBolts'],
+    fact: 'Supersport clutches are usually “slipper” clutches: they slip briefly during aggressive downshifts so engine braking can’t lock or hop the rear wheel.' },
+  Engine_AltCover: { displayName: 'Alternator cover', system: ENG, material: 'Magnesium alloy, satin',
+    whatItIs: 'The cover on the left end of the crankshaft, over the alternator.',
+    function: 'The alternator underneath generates electricity as the engine runs, which charges the battery and powers the lights, electronics and ignition.',
+    connectsTo: ['Engine_Crankcase', 'Engine_CoverBolts', 'Battery_Box'] },
+  Engine_StarterCover: { displayName: 'Starter cover', system: ENG, material: 'Magnesium alloy, satin',
+    whatItIs: 'The smaller cover on the right side, over the starter gears.',
+    function: 'It encloses the gears and one-way clutch that let the electric starter spin the crankshaft, then freewheel once the engine fires.',
+    connectsTo: ['Engine_Crankcase', 'Engine_ClutchCover'] },
+  Engine_CoverBolts: { displayName: 'Engine cover bolts', system: ENG, material: 'Polished aluminium',
+    whatItIs: 'The ring of small bolts that hold the side covers onto the crankcase.',
+    function: 'They clamp each cover evenly against its gasket so no oil escapes. Tightening them to the right torque in a criss-cross order keeps the cover from warping.',
+    connectsTo: ['Engine_ClutchCover', 'Engine_AltCover'] },
+  Airbox: { displayName: 'Airbox', system: ENG, material: 'Moulded black plastic',
+    whatItIs: 'The sealed box under the front of the fuel tank that holds the air filter.',
+    function: 'It collects air from the ram-air duct, filters it, and calms it so each of the four throttle bodies gets a smooth, even supply.',
+    connectsTo: ['RamAirDuct', 'Engine_Head', 'TankFrontCover', 'FuelTank'] },
+  Radiator_Core: { displayName: 'Radiator', system: ENG, material: 'Aluminium tubes and fins, black',
+    whatItIs: 'The curved radiator core in front of the engine.',
+    function: 'Hot coolant from the engine flows through its thin tubes while air rushes through the fins between them, carrying the heat away. That keeps the engine at its working temperature.',
+    connectsTo: ['Radiator_Tank', 'Hose_RadUpper', 'Hose_RadLower', 'FrameDown'] },
+  Radiator_Tank: { displayName: 'Radiator end tank', system: ENG, material: 'Aluminium, black',
+    whatItIs: 'The tank at each side of the radiator core.',
+    function: 'It spreads incoming coolant across all the tubes and collects it again at the other end, so the whole core does useful work.',
+    connectsTo: ['Radiator_Core', 'Hose_RadUpper', 'Hose_RadLower'] },
+  Hose_RadUpper: { displayName: 'Upper radiator hose', system: ENG, material: 'Reinforced rubber hose',
+    whatItIs: 'The hose from the thermostat on the cylinder head to the radiator.',
+    function: 'It carries the hottest coolant from the engine to the radiator once the thermostat opens.',
+    connectsTo: ['Radiator_Tank_R', 'Engine_Head'] },
+  Hose_RadLower: { displayName: 'Lower radiator hose', system: ENG, material: 'Reinforced rubber hose',
+    whatItIs: 'The hose from the bottom of the radiator back to the water pump.',
+    function: 'It returns cooled coolant to the pump, which pushes it back around the cylinders and head.',
+    connectsTo: ['Radiator_Tank_L', 'Engine_Block'] },
+
+  /* ---------- Exhaust ---------- */
+  Exhaust_Header: { displayName: 'Exhaust header', system: EXH, material: 'Stainless steel with heat tint',
+    whatItIs: 'One of four stainless pipes leading from the exhaust ports on the front of the cylinder head.',
+    function: 'It carries the hot exhaust gas away from its cylinder. The four pipes have closely matched lengths so the gas pulses help pull the next charge through the engine.',
+    connectsTo: ['Engine_Head', 'Exhaust_Collector', 'Fairing_Lower'],
+    fact: 'The straw, bronze and blue colours on the headers aren’t paint. Heat grows a microscopically thin oxide layer on the steel, and its thickness sets the colour, the same effect as on a soap bubble.' },
+  Exhaust_Collector: { displayName: 'Exhaust collector', system: EXH, material: 'Stainless steel',
+    whatItIs: 'The box under the engine where the four headers merge.',
+    function: 'It combines the four exhaust flows into one and usually houses the catalytic converter, which cleans up the exhaust gas.',
+    connectsTo: ['Exhaust_Header', 'Exhaust_LinkPipe', 'BellyPan'] },
+  Exhaust_LinkPipe: { displayName: 'Exhaust link pipe', system: EXH, material: 'Stainless steel',
+    whatItIs: 'The pipe from the collector to the silencer.',
+    function: 'It carries the combined exhaust back and out to the side, where the silencer tucks in close to the swingarm.',
+    connectsTo: ['Exhaust_Collector', 'Exhaust_Muffler'] },
+  Exhaust_Muffler: { displayName: 'Silencer', system: EXH, material: 'Titanium sleeve',
+    whatItIs: 'The short titanium silencer on the right side of the bike.',
+    function: 'Inside, a perforated tube wrapped in sound-deadening packing soaks up noise while letting the gas through with as little restriction as possible.',
+    connectsTo: ['Exhaust_LinkPipe', 'Exhaust_EndCap'],
+    fact: 'Titanium is about 40% lighter than steel for the same size and hardly corrodes, so it’s the go-to metal for performance silencers.' },
+  Exhaust_EndCap: { displayName: 'Silencer end cap', system: EXH, material: 'Clear-coated carbon fibre',
+    whatItIs: 'The carbon cap closing the rear of the silencer.',
+    function: 'It holds the silencer’s internals in place and carries the outlet tips.',
+    connectsTo: ['Exhaust_Muffler', 'Exhaust_Tip'] },
+  Exhaust_Tip: { displayName: 'Exhaust tip', system: EXH, material: 'Chrome-plated steel',
+    whatItIs: 'One of the two outlet tips at the back of the silencer.',
+    function: 'The exhaust leaves the bike here. The twin outlets split the gas flow, which helps shape the sound.',
+    connectsTo: ['Exhaust_EndCap', 'Exhaust_TipIn'] },
+  Exhaust_TipIn: { displayName: 'Exhaust tip liner', system: EXH, material: 'Black heat-resistant coating',
+    whatItIs: 'The dark inner liner inside each exhaust tip.',
+    function: 'It lines the outlet, shielding the polished tip from soot and heat discolouration.',
+    connectsTo: ['Exhaust_Tip'] },
+
+  /* ---------- Wheels & brakes ---------- */
+  FrontWheel_Tire: { displayName: 'Front tyre', system: WHB, material: 'Rubber compound over radial carcass',
+    whatItIs: 'The 120/70 ZR17 radial front tyre.',
+    function: 'It steers the bike and does most of the braking, all through a contact patch about the size of a credit card. The size code means 120 mm wide, sidewall 70% of the width, rated for over 240 km/h, radial construction, and a 17-inch rim.',
+    connectsTo: ['FrontWheel_Rim', 'FrontFender'] },
+  FrontWheel_Rim: { displayName: 'Front rim', system: WHB, material: 'Cast aluminium, gloss black with clear coat',
+    whatItIs: 'The outer hoop of the cast-aluminium front wheel.',
+    function: 'It holds the tyre bead airtight and forms the wheel’s outer structure. Keeping it light helps the bike steer quickly, because a lighter wheel is easier to tip into a turn.',
+    connectsTo: ['FrontWheel_Tire', 'FrontWheel_Spokes', 'FrontWheel_Hub'] },
+  FrontWheel_Spokes: { displayName: 'Front wheel spokes', system: WHB, material: 'Cast aluminium, gloss black',
+    whatItIs: 'The cast spokes joining the rim to the hub.',
+    function: 'They carry braking, cornering and bump loads from the rim into the hub while keeping the wheel as light as possible.',
+    connectsTo: ['FrontWheel_Rim', 'FrontWheel_Hub'] },
+  FrontWheel_Hub: { displayName: 'Front hub', system: WHB, material: 'Cast aluminium, gloss black',
+    whatItIs: 'The centre of the front wheel, with bearings for the axle.',
+    function: 'It spins on the axle and carries both brake discs, passing their braking force into the wheel.',
+    connectsTo: ['FrontWheel_Axle', 'FrontWheel_Spokes', 'FrontDisc_Carrier'] },
+  FrontWheel_Axle: { displayName: 'Front axle', system: WHB, material: 'Hollow steel',
+    whatItIs: 'The hollow steel shaft through the front hub.',
+    function: 'It holds the wheel in the fork feet and helps tie the two fork legs together, so they can’t twist independently under braking.',
+    connectsTo: ['FrontWheel_Hub', 'Fork_AxleClamp'] },
+  FrontDisc: { displayName: 'Front brake disc', system: WHB, material: 'Stainless steel rotor, drilled',
+    whatItIs: 'A 320 mm floating steel rotor, one of two on the front wheel.',
+    function: 'The caliper squeezes it to slow the front wheel, which does most of the braking. Its drilled holes save weight and help shed heat and pad dust.',
+    connectsTo: ['FrontDisc_Carrier', 'FrontDisc_Buttons', 'FrontCaliper'],
+    fact: 'Under hard braking the bike’s weight pitches forward so much that the front brake can do nearly all of the stopping. That’s why the front gets two big discs and the rear gets one small one.' },
+  FrontDisc_Carrier: { displayName: 'Front disc carrier', system: WHB, material: 'Machined aluminium',
+    whatItIs: 'The aluminium centre that bolts the brake rotor to the wheel hub.',
+    function: 'It transfers braking force from the rotor to the wheel. Making it aluminium instead of steel cuts weight exactly where it matters most: in the spinning, unsprung wheel.',
+    connectsTo: ['FrontDisc', 'FrontDisc_Buttons', 'FrontWheel_Hub'] },
+  FrontDisc_Buttons: { displayName: 'Floating disc buttons', system: WHB, material: 'Machined aluminium',
+    whatItIs: 'The small bobbins that link the steel rotor to its carrier.',
+    function: 'They let the rotor “float”: it can grow as it heats up and centre itself between the pads, instead of warping. That’s why a floating disc gives a steadier brake feel.',
+    connectsTo: ['FrontDisc', 'FrontDisc_Carrier'] },
+  FrontCaliper: { displayName: 'Front brake caliper', system: WHB, material: 'Gold anodised aluminium, monobloc',
+    whatItIs: 'A radially mounted, four-piston monobloc caliper, one per front disc.',
+    function: 'When the rider pulls the brake lever, fluid pressure pushes four pistons that clamp the pads onto the disc, turning speed into heat.',
+    connectsTo: ['FrontDisc', 'BrakeHose', 'Fork_AxleClamp'],
+    fact: '“Monobloc” means the caliper is machined from a single block rather than two bolted halves, so it flexes less and the lever feels firmer.' },
+  BrakeHose: { displayName: 'Front brake line', system: WHB, material: 'Stainless braided line, black sheath',
+    whatItIs: 'The hydraulic line from the master cylinder to a front caliper.',
+    function: 'It carries brake fluid pressure from the lever to the caliper. The braided construction barely swells under pressure, so the lever stays firm and precise.',
+    connectsTo: ['MasterCylinder', 'FrontCaliper'] },
+  RearWheel_Tire: { displayName: 'Rear tyre', system: WHB, material: 'Rubber compound over radial carcass',
+    whatItIs: 'The 190/55 ZR17 radial rear tyre.',
+    function: 'It puts the engine’s power down on the road. It’s much wider than the front for grip under acceleration, and the low 55% profile keeps the contact patch large at full lean.',
+    connectsTo: ['RearWheel_Rim', 'RearHugger'] },
+  RearWheel_Rim: { displayName: 'Rear rim', system: WHB, material: 'Cast aluminium, gloss black with clear coat',
+    whatItIs: 'The wide outer hoop of the cast rear wheel.',
+    function: 'It holds the wide rear tyre in the right profile and carries drive, braking and cornering loads.',
+    connectsTo: ['RearWheel_Tire', 'RearWheel_Spokes', 'RearWheel_Hub'] },
+  RearWheel_Spokes: { displayName: 'Rear wheel spokes', system: WHB, material: 'Cast aluminium, gloss black',
+    whatItIs: 'The cast spokes of the rear wheel.',
+    function: 'They pass the chain’s driving force from the hub out to the rim and tyre.',
+    connectsTo: ['RearWheel_Rim', 'RearWheel_Hub'] },
+  RearWheel_Hub: { displayName: 'Rear hub', system: WHB, material: 'Cast aluminium, gloss black',
+    whatItIs: 'The centre of the rear wheel.',
+    function: 'It spins on bearings around the axle. Inside, a rubber cush drive between the sprocket carrier and wheel softens shocks from the chain on gear changes and throttle jabs.',
+    connectsTo: ['RearWheel_Axle', 'RearSprocket_Carrier', 'RearDisc_Carrier'] },
+  RearWheel_Axle: { displayName: 'Rear axle', system: WHB, material: 'Hollow steel',
+    whatItIs: 'The steel shaft through the rear hub and swingarm.',
+    function: 'It holds the rear wheel in the swingarm. Its position in the chain adjusters sets the chain tension.',
+    connectsTo: ['RearWheel_Hub', 'ChainAdjuster', 'RearCaliperHanger'] },
+  RearDisc: { displayName: 'Rear brake disc', system: WHB, material: 'Stainless steel rotor, drilled',
+    whatItIs: 'The 220 mm rear brake rotor.',
+    function: 'The rear brake does less stopping because weight shifts forward under braking. Riders use it to settle the bike, control speed mid-corner, and stay stable.',
+    connectsTo: ['RearDisc_Carrier', 'RearDisc_Buttons', 'RearCaliper'] },
+  RearDisc_Carrier: { displayName: 'Rear disc carrier', system: WHB, material: 'Machined aluminium',
+    whatItIs: 'The centre that mounts the rear rotor to the hub.',
+    function: 'It connects the rotor to the wheel so braking force reaches the tyre.',
+    connectsTo: ['RearDisc', 'RearDisc_Buttons', 'RearWheel_Hub'] },
+  RearDisc_Buttons: { displayName: 'Rear disc buttons', system: WHB, material: 'Machined aluminium',
+    whatItIs: 'The bobbins joining the rear rotor to its carrier.',
+    function: 'They let the rotor expand with heat without warping, keeping the pedal feel consistent.',
+    connectsTo: ['RearDisc', 'RearDisc_Carrier'] },
+  RearCaliper: { displayName: 'Rear brake caliper', system: WHB, material: 'Gold anodised aluminium',
+    whatItIs: 'The smaller two-piston caliper on the rear disc.',
+    function: 'It clamps the rear disc when the rider presses the right foot pedal.',
+    connectsTo: ['RearDisc', 'RearCaliperHanger', 'FootLever_R'] },
+  RearCaliperHanger: { displayName: 'Rear caliper hanger', system: WHB, material: 'Black anodised aluminium',
+    whatItIs: 'The bracket that holds the rear caliper on the axle.',
+    function: 'It positions the caliper over the disc and is keyed to the swingarm, so braking torque can’t spin the caliper around the axle.',
+    connectsTo: ['RearCaliper', 'RearWheel_Axle', 'Swingarm_R'] },
+
+  /* ---------- Drivetrain ---------- */
+  Chain: { displayName: 'Drive chain', system: DRV, material: 'Hardened steel with X-ring seals',
+    whatItIs: 'The 520-pitch roller chain on the left of the bike.',
+    function: 'It carries the engine’s power from the gearbox to the rear wheel. It’s light and efficient, and easy to re-gear by changing sprockets.',
+    connectsTo: ['FrontSprocket', 'RearSprocket', 'ChainAdjuster', 'ChainGuard'],
+    fact: '“520” is a size code: the 5 means 5/8-inch pitch between rollers, and the 20 means 2/8 (¼-inch) roller width. Tiny sealing rings keep grease locked inside every link.' },
+  FrontSprocket: { displayName: 'Front sprocket', system: DRV, material: 'Hardened steel',
+    whatItIs: 'The small drive sprocket on the gearbox output shaft.',
+    function: 'It pulls the chain round. Its tooth count compared with the rear sprocket sets the final gearing: a smaller front sprocket gives harder acceleration and a lower top speed.',
+    connectsTo: ['Chain', 'Engine_Sprocket_Cover', 'Engine_Crankcase'] },
+  Engine_Sprocket_Cover: { displayName: 'Sprocket cover', system: DRV, material: 'Textured black plastic',
+    whatItIs: 'The cover over the front sprocket on the left side of the engine.',
+    function: 'It guards the rider’s left boot from the spinning sprocket and catches chain lube flung off at speed.',
+    connectsTo: ['FrontSprocket', 'Engine_Crankcase', 'Chain'] },
+  RearSprocket: { displayName: 'Rear sprocket', system: DRV, material: 'Machined aluminium',
+    whatItIs: 'The large sprocket on the left side of the rear wheel.',
+    function: 'The chain drives it to turn the rear wheel. Swapping it for more or fewer teeth changes the gearing without touching the engine.',
+    connectsTo: ['Chain', 'RearSprocket_Carrier'] },
+  RearSprocket_Carrier: { displayName: 'Sprocket carrier', system: DRV, material: 'Black anodised aluminium',
+    whatItIs: 'The carrier that mounts the rear sprocket to the wheel.',
+    function: 'It slots into rubber cush-drive blocks in the hub, which absorb jolts from the drivetrain before they reach the chain and gearbox.',
+    connectsTo: ['RearSprocket', 'RearWheel_Hub'] },
+
+  /* ---------- Controls ---------- */
+  ClipOn_Bar: { displayName: 'Clip-on handlebar', system: CTL, material: 'Black anodised aluminium',
+    whatItIs: 'The short, low handlebar tube that clamps onto each fork leg.',
+    function: 'It places the rider’s hands low and forward so they tuck in behind the screen, and gives them the leverage to steer the bike.',
+    connectsTo: ['ClipOn_Collar', 'Grip', 'Switchgear', 'BarEnd'] },
+  ClipOn_Collar: { displayName: 'Clip-on clamp', system: CTL, material: 'Black anodised aluminium',
+    whatItIs: 'The clamp that fixes each clip-on to the fork tube just below the top clamp.',
+    function: 'It grips the fork tube to hold the handlebar firmly at the chosen angle.',
+    connectsTo: ['ClipOn_Bar', 'Fork_Outer', 'TripleClamp_Top'] },
+  Grip: { displayName: 'Handlebar grip', system: CTL, material: 'Soft rubber compound',
+    whatItIs: 'The rubber grip on the end of the handlebar.',
+    function: 'It gives the rider’s hand a secure, vibration-damped hold.',
+    connectsTo: ['ClipOn_Bar', 'BarEnd'] },
+  Grip_R: { displayName: 'Throttle grip', system: CTL, material: 'Soft rubber on a rotating throttle tube',
+    whatItIs: 'The right-hand grip, which twists to work the throttle.',
+    function: 'Twisting it asks the engine for power. It’s ride-by-wire: a sensor reads the grip’s angle and the ECU opens the throttle valves, filtering the request through the riding mode and traction control.',
+    connectsTo: ['ClipOn_Bar', 'Switchgear', 'BarEnd'] },
+  BarEnd: { displayName: 'Bar-end weight', system: CTL, material: 'Polished aluminium',
+    whatItIs: 'The weighted plug in the end of each handlebar.',
+    function: 'Its mass damps the buzz that travels up the bars from the engine, and it protects the lever and grip if the bike tips over.',
+    connectsTo: ['ClipOn_Bar', 'Grip'] },
+  Lever: { displayName: 'Hand lever', system: CTL, material: 'Polished forged aluminium',
+    whatItIs: 'A hand lever on the handlebar.',
+    function: 'It works either the clutch or the front brake.',
+    connectsTo: ['ClipOn_Bar', 'Switchgear'] },
+  Lever_L: { displayName: 'Clutch lever', system: CTL, material: 'Polished forged aluminium',
+    whatItIs: 'The left hand lever, which works the clutch.',
+    function: 'Pulling it disengages the clutch so the rider can pull away from a stop or change gear. It can be adjusted for reach to suit smaller or larger hands.',
+    connectsTo: ['ClipOn_Bar', 'Switchgear_L', 'Engine_ClutchCover'] },
+  Lever_R: { displayName: 'Front brake lever', system: CTL, material: 'Polished forged aluminium',
+    whatItIs: 'The right hand lever, which works the front brakes.',
+    function: 'Pulling it pushes the piston in the master cylinder, which pressurises the fluid that clamps both front calipers. Its span is adjustable.',
+    connectsTo: ['MasterCylinder', 'ClipOn_Bar', 'Switchgear_R'] },
+  Switchgear: { displayName: 'Switchgear', system: CTL, material: 'Moulded black plastic',
+    whatItIs: 'The switch block next to the grip.',
+    function: 'It puts the bike’s electrical controls under the rider’s thumbs.',
+    connectsTo: ['ClipOn_Bar', 'Grip'] },
+  Switchgear_L: { displayName: 'Left switchgear', system: CTL, material: 'Moulded black plastic',
+    whatItIs: 'The switch block beside the left grip.',
+    function: 'It holds the indicator, horn, headlight flash and dipswitch, plus the buttons that step through the dashboard menus and rider aids.',
+    connectsTo: ['ClipOn_Bar', 'Grip', 'Dash_Screen'] },
+  Switchgear_R: { displayName: 'Right switchgear', system: CTL, material: 'Moulded black plastic',
+    whatItIs: 'The switch block beside the throttle.',
+    function: 'It carries the starter button and the engine kill switch, so the rider can stop the engine without letting go of the throttle.',
+    connectsTo: ['ClipOn_Bar', 'Grip_R', 'MasterCylinder'] },
+  MasterCylinder: { displayName: 'Front brake master cylinder', system: CTL, material: 'Black anodised aluminium',
+    whatItIs: 'The radial master cylinder on the right handlebar.',
+    function: 'The brake lever pushes its piston, converting the rider’s squeeze into hydraulic pressure that runs down the brake lines to both front calipers.',
+    connectsTo: ['Lever_R', 'Reservoir', 'BrakeHose'],
+    fact: '“Radial” means the piston moves in line with the lever’s pull rather than across it, which gives a more direct, progressive feel at the lever.' },
+  Reservoir: { displayName: 'Brake fluid reservoir', system: CTL, material: 'Translucent plastic',
+    whatItIs: 'The small pot above the master cylinder that holds spare brake fluid.',
+    function: 'As the pads wear, the caliper pistons sit further out and need more fluid. The reservoir tops the system up automatically, and its see-through body lets you check the level.',
+    connectsTo: ['MasterCylinder', 'ReservoirCap'] },
+  ReservoirCap: { displayName: 'Reservoir cap', system: CTL, material: 'Black anodised aluminium',
+    whatItIs: 'The screw cap on the brake fluid reservoir.',
+    function: 'A flexible diaphragm under it follows the fluid level down, keeping out air and moisture, which brake fluid readily absorbs.',
+    connectsTo: ['Reservoir'] },
+  Rearset: { displayName: 'Rearset hanger', system: CTL, material: 'Black anodised aluminium',
+    whatItIs: 'The bracket that mounts the rider’s footpeg and foot lever to the frame.',
+    function: 'It places the feet high and rearward, so the rider gets ground clearance at full lean and can grip the bike with their legs.',
+    connectsTo: ['FootPeg', 'FootLever', 'FrameSpar'] },
+  FootPeg: { displayName: 'Rider footpeg', system: CTL, material: 'Knurled aluminium',
+    whatItIs: 'The rider’s footrest.',
+    function: 'Besides holding the rider’s feet, it is a steering input: pressing on the inside peg helps tip the bike into a turn. The knurled surface stops boots slipping.',
+    connectsTo: ['Rearset', 'FootLever'] },
+  FootLever: { displayName: 'Foot lever', system: CTL, material: 'Polished aluminium',
+    whatItIs: 'A foot-operated lever.',
+    function: 'It works the gearshift or the rear brake.',
+    connectsTo: ['Rearset', 'FootLeverTip'] },
+  FootLever_L: { displayName: 'Gear lever', system: CTL, material: 'Polished aluminium',
+    whatItIs: 'The left foot lever, which changes gear.',
+    function: 'Lifting or pressing it shifts through the six-speed gearbox. A quickshifter sensor lets the rider change gear without using the clutch or closing the throttle.',
+    connectsTo: ['Rearset_L', 'FootLeverTip_L', 'Engine_Crankcase'] },
+  FootLever_R: { displayName: 'Rear brake pedal', system: CTL, material: 'Polished aluminium',
+    whatItIs: 'The right foot lever, which works the rear brake.',
+    function: 'Pressing it pushes a small master cylinder that pressurises the rear caliper.',
+    connectsTo: ['Rearset_R', 'FootLeverTip_R', 'RearCaliper'] },
+  FootLeverTip: { displayName: 'Foot lever tip', system: CTL, material: 'Rubber',
+    whatItIs: 'The rubber tip on the end of the foot lever.',
+    function: 'It gives the rider’s boot a secure, non-slip point to press or lift, and it can be positioned to suit boot size.',
+    connectsTo: ['FootLever'] },
+  PillionHanger: { displayName: 'Pillion peg hanger', system: CTL, material: 'Black anodised aluminium',
+    whatItIs: 'The bracket that bolts the passenger footpeg to the subframe.',
+    function: 'It holds the passenger’s peg high and out of the rider’s way, and unbolts completely for track days.',
+    connectsTo: ['PillionPeg', 'SubFrame_Low'] },
+  PillionPeg: { displayName: 'Pillion footpeg', system: CTL, material: 'Rubber-topped folding peg',
+    whatItIs: 'The passenger’s footrest.',
+    function: 'It gives a passenger somewhere to brace their feet. It folds up when not in use.',
+    connectsTo: ['PillionHanger'] },
+};
+
+/* Group-level fallbacks so no part is ever blank. */
+const GROUP_INFO = {
+  fairing:     { system: BODY, whatItIs: 'A piece of the front and side fairing.', function: 'Fairing panels shape the airflow around the bike and rider, and protect the mechanical parts underneath.', connectsTo: ['Fairing_Nose', 'Fairing_Side'] },
+  tank:        { system: BODY, whatItIs: 'Part of the fuel tank assembly.', function: 'Stores fuel and gives the rider something to grip with their knees.', connectsTo: ['FuelTank'] },
+  seat:        { system: BODY, whatItIs: 'Part of the seat.', function: 'Supports the rider.', connectsTo: ['Seat', 'TailCowl'] },
+  tail:        { system: BODY, whatItIs: 'Part of the tail section.', function: 'Encloses the rear subframe and carries the rear lights.', connectsTo: ['TailCowl'] },
+  fender:      { system: BODY, whatItIs: 'A mudguard.', function: 'Keeps road spray and stones away from the mechanical parts.', connectsTo: ['FrontFender'] },
+  cockpit:     { system: BODY, whatItIs: 'Part of the cockpit behind the screen.', function: 'Holds the instruments and mirrors in the rider’s view.', connectsTo: ['Dash', 'Windscreen'] },
+  frame:       { system: CHAS, whatItIs: 'Part of the aluminium main frame.', function: 'The frame ties the steering, engine and swingarm together and carries the loads between the wheels.', connectsTo: ['FrameSpar', 'SteeringHead'] },
+  subframe:    { system: CHAS, whatItIs: 'Part of the bolt-on rear subframe.', function: 'Carries the seat, tail and electrics.', connectsTo: ['SubFrame_Top', 'FrameSpar'] },
+  swingarm:    { system: CHAS, whatItIs: 'Part of the swingarm assembly.', function: 'Locates the rear wheel and lets it move against the rear shock.', connectsTo: ['Swingarm', 'Shock_Body'] },
+  shock:       { system: CHAS, whatItIs: 'Part of the rear shock absorber.', function: 'Springs and damps the rear suspension.', connectsTo: ['Shock_Body'] },
+  steering:    { system: CHAS, whatItIs: 'Part of the steering assembly.', function: 'Holds the forks and lets the front end turn.', connectsTo: ['TripleClamp_Top', 'SteeringHead'] },
+  front_fork:  { system: CHAS, whatItIs: 'Part of the upside-down front fork.', function: 'Suspends and steers the front wheel.', connectsTo: ['Fork_Outer', 'TripleClamp_Top'] },
+  engine:      { system: ENG, whatItIs: 'Part of the inline-four engine.', function: 'Turns fuel and air into power.', connectsTo: ['Engine_Crankcase', 'Engine_Head'] },
+  radiator:    { system: ENG, whatItIs: 'Part of the cooling system.', function: 'Carries heat away from the engine into the passing air.', connectsTo: ['Radiator_Core'] },
+  exhaust:     { system: EXH, whatItIs: 'Part of the exhaust system.', function: 'Carries exhaust gas away from the engine, cleans it and quietens it.', connectsTo: ['Exhaust_Collector', 'Exhaust_Muffler'] },
+  drive:       { system: DRV, whatItIs: 'Part of the chain drive.', function: 'Carries power from the gearbox to the rear wheel.', connectsTo: ['Chain'] },
+  front_wheel: { system: WHB, whatItIs: 'Part of the front wheel.', function: 'Rolls, steers and brakes.', connectsTo: ['FrontWheel_Hub', 'FrontWheel_Tire'] },
+  rear_wheel:  { system: WHB, whatItIs: 'Part of the rear wheel.', function: 'Rolls and puts the power down.', connectsTo: ['RearWheel_Hub', 'RearWheel_Tire'] },
+  front_brake: { system: WHB, whatItIs: 'Part of the front brake system.', function: 'Slows the front wheel, which does most of the braking.', connectsTo: ['FrontDisc', 'FrontCaliper'] },
+  rear_brake:  { system: WHB, whatItIs: 'Part of the rear brake system.', function: 'Slows the rear wheel and helps keep the bike stable.', connectsTo: ['RearDisc', 'RearCaliper'] },
+  controls:    { system: CTL, whatItIs: 'A handlebar control.', function: 'Lets the rider steer, brake, use the clutch and work the electrics.', connectsTo: ['ClipOn_Bar'] },
+  pegs:        { system: CTL, whatItIs: 'Part of the footpeg assembly.', function: 'Supports the rider’s or passenger’s feet and carries the foot controls.', connectsTo: ['Rearset', 'FootPeg'] },
+};
+
+/* Readable finish names for the Blender materials (fallback for the panel). */
+const MAT_LABEL = {
+  Paint: 'Metallic racing blue, clear coat', Gold: 'Gold anodised aluminium', Rotor: 'Stainless steel',
+  Chrome: 'Chrome-plated steel', HeaderSteel: 'Stainless steel, heat tinted', RimBlack: 'Gloss black, clear coat',
+  TireF: 'Rubber', TireR: 'Rubber', CastAlu: 'Cast aluminium, dark satin', FrameAlu: 'Aluminium, dark satin',
+  Magnesium: 'Magnesium alloy', Glass: 'Tinted polycarbonate', LED: 'LED', HeadLamp: 'LED projector', TailLED: 'Red LED',
+  Carbon: 'Carbon fibre', Plastic: 'Textured black plastic', Seat: 'Synthetic leather', Spring: 'Spring steel, yellow',
+  Caliper: 'Gold anodised aluminium', PolishedAlu: 'Polished aluminium', BlackAnod: 'Black anodised aluminium',
+  EngineBlack: 'Black-finished aluminium', Rubber: 'Rubber', Hose: 'Rubber / braided hose', Steel: 'Steel',
+  DLC: 'DLC-coated steel', BlueAnod: 'Blue anodised aluminium', Amber: 'Amber lens', Mirror: 'Mirror glass',
+  Lens: 'Translucent plastic', RadiatorCore: 'Aluminium core', TiMuffler: 'Titanium', ChainSteel: 'Hardened steel',
+  Screen: 'Gloss black polycarbonate', Plate: 'Aluminium',
+};
+
+/* Group → system and explode stage (0 leaves first, 3 moves last). */
+const GROUPS = {
+  fairing: [BODY, 0], tank: [BODY, 0], seat: [BODY, 0], tail: [BODY, 0], fender: [BODY, 0], cockpit: [BODY, 0],
+  controls: [CTL, 1], pegs: [CTL, 1], front_wheel: [WHB, 1], rear_wheel: [WHB, 1], front_brake: [WHB, 1], rear_brake: [WHB, 1],
+  front_fork: [CHAS, 2], swingarm: [CHAS, 2], exhaust: [EXH, 2], steering: [CHAS, 2], shock: [CHAS, 2],
+  subframe: [CHAS, 2], drive: [DRV, 2], radiator: [ENG, 2],
+  engine: [ENG, 3], frame: [CHAS, 3],
+};
+const SYSTEM_ORDER = [BODY, CHAS, ENG, EXH, WHB, DRV, CTL];
+
+/* Fixes for data in bike.blend. These three sit on the right handlebar but
+   their exploded_off pushes them +Y (left) through the bike; mirror it. */
+const OFFSET_FIX = { MasterCylinder: [1, -1, 1], Reservoir: [1, -1, 1], ReservoirCap: [1, -1, 1] };
+const NAME_FIX = { Fairing_Rower_R: 'Fairing_Lower_R' };
+
+/* =====================================================================
+   MATERIALS (Blender values, linear colour)
+   ===================================================================== */
+const MATDEF = {
+  Paint:       { c: [0.004, 0.03, 0.36], m: 0.55, r: 0.32, cc: 1, ccr: 0.03, paint: true },
+  Gold:        { c: [0.95, 0.66, 0.24], m: 1, r: 0.22 },
+  Rotor:       { c: [0.62, 0.62, 0.63], m: 1, r: 0.28 },
+  Chrome:      { c: [0.96, 0.96, 0.97], m: 1, r: 0.04 },
+  HeaderSteel: { c: [0.78, 0.7, 0.6], m: 1, r: 0.24, iri: 0.75 },
+  RimBlack:    { c: [0.01, 0.01, 0.011], m: 0.3, r: 0.3, cc: 1, ccr: 0.04 },
+  TireF:       { c: [0.012, 0.012, 0.013], r: 0.78, grain: [700, 0.00012], env: 0.6 },
+  TireR:       { c: [0.012, 0.012, 0.013], r: 0.78, grain: [700, 0.00012], env: 0.6 },
+  CastAlu:     { c: [0.24, 0.25, 0.265], m: 1, r: 0.36, grain: [900, 0.00002] },
+  FrameAlu:    { c: [0.16, 0.165, 0.175], m: 1, r: 0.42, grain: [900, 0.00002] },
+  Magnesium:   { c: [0.16, 0.17, 0.18], m: 1, r: 0.38, grain: [1100, 0.00002] },
+  Glass:       { c: [0.3, 0.34, 0.4], r: 0.03, tr: 1, th: 0.004 },
+  LED:         { c: [1, 1, 1], r: 0.2, em: [0.85, 0.92, 1], ei: 7 },
+  HeadLamp:    { c: [1, 1, 1], r: 0.2, em: [1, 0.97, 0.9], ei: 3 },
+  TailLED:     { c: [0.5, 0.02, 0.02], r: 0.2, em: [1, 0.02, 0.01], ei: 5 },
+  Carbon:      { c: [0.022, 0.022, 0.025], m: 0.2, r: 0.3, cc: 1, ccr: 0.03, weave: 180 },
+  Plastic:     { c: [0.018, 0.018, 0.02], r: 0.55, grain: [1400, 0.00005] },
+  Seat:        { c: [0.022, 0.022, 0.024], r: 0.62, grain: [260, 0.00022], sheen: 0.4 },
+  Spring:      { c: [0.95, 0.72, 0.1], m: 0.6, r: 0.3, cc: 0.8, ccr: 0.08 },
+  Caliper:     { c: [0.85, 0.55, 0.12], m: 1, r: 0.3, cc: 0.5, ccr: 0.1 },
+  PolishedAlu: { c: [0.9, 0.9, 0.91], m: 1, r: 0.14 },
+  BlackAnod:   { c: [0.03, 0.03, 0.032], m: 1, r: 0.34 },
+  EngineBlack: { c: [0.03, 0.03, 0.032], m: 0.8, r: 0.45, cc: 0.3, ccr: 0.3, grain: [1600, 0.00003] },
+  Rubber:      { c: [0.016, 0.016, 0.017], r: 0.66, grain: [900, 0.00006], env: 0.6 },
+  Hose:        { c: [0.02, 0.02, 0.02], r: 0.55 },
+  Steel:       { c: [0.75, 0.75, 0.76], m: 1, r: 0.22 },
+  DLC:         { c: [0.13, 0.115, 0.1], m: 1, r: 0.15 },
+  BlueAnod:    { c: [0.05, 0.15, 0.7], m: 1, r: 0.25 },
+  Amber:       { c: [1, 0.45, 0.05], r: 0.1, em: [1, 0.45, 0.05], ei: 0.25, cc: 1, ccr: 0.02 },
+  Mirror:      { c: [0.95, 0.95, 0.95], m: 1, r: 0.02 },
+  Lens:        { c: [0.9, 0.95, 1], r: 0.05, tr: 0.9, th: 0.01 },
+  RadiatorCore:{ c: [0.05, 0.05, 0.055], m: 0.9, r: 0.45, grain: [900, 0.00008] },
+  TiMuffler:   { c: [0.22, 0.22, 0.24], m: 1, r: 0.3, iri: 0.25 },
+  ChainSteel:  { c: [0.3, 0.3, 0.31], m: 1, r: 0.35 },
+  Screen:      { c: [0.02, 0.025, 0.03], r: 0.08, cc: 1, ccr: 0.02 },
+  Plate:       { c: [0.85, 0.85, 0.85], r: 0.45 },
+};
+
+/* ===================================================================== */
+
+const $ = (id) => document.getElementById(id);
+const body = document.body;
+const lin = (a) => new THREE.Color().setRGB(a[0], a[1], a[2], THREE.LinearSRGBColorSpace);
+const clamp01 = (x) => Math.min(1, Math.max(0, x));
+const easeInOut = (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const reduceMQ = matchMedia('(prefers-reduced-motion: reduce)');
+const phoneMQ = matchMedia('(max-width: 720px)');
+let reduceMotion = reduceMQ.matches;
+
+/* ---------------------------------------------------------------------
+   Renderer, scene, studio
+   --------------------------------------------------------------------- */
+const stage = $('stage');
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+} catch (err) {
+  fail('Your browser couldn’t start WebGL, which this page needs to draw the 3D model. Try a current version of Chrome, Edge, Firefox or Safari, and check that hardware acceleration is turned on.', err);
+  throw err;
+}
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.08;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const canvas = renderer.domElement;
+canvas.setAttribute('role', 'img');
+canvas.setAttribute('aria-label', 'Interactive 3D view of the Harrow 1000S motorcycle. Drag to orbit from any angle, right-drag to pan, scroll to zoom. Click the bike to take it apart; use the Parts list to select parts by keyboard.');
+stage.appendChild(canvas);
+
+const BG = new THREE.Color(0x07090d);
+const scene = new THREE.Scene();
+scene.background = BG;
+scene.fog = new THREE.Fog(BG, 7, 16);
+
+const camera = new THREE.PerspectiveCamera(32, innerWidth / innerHeight, 0.05, 60);
+camera.position.set(4, 1.4, 4);
+
+// Reflections: RoomEnvironment with its grey walls darkened, so only the light panels reflect.
+const pmrem = new THREE.PMREMGenerator(renderer);
+{
+  const room = new RoomEnvironment(renderer);
+  room.traverse((o) => {
+    if (o.isMesh && o.material && o.material.isMeshStandardMaterial) o.material.color.setScalar(0.07);
+    if (o.isMesh && o.material && o.material.isMeshBasicMaterial) o.material.color.multiplyScalar(0.11); // light panels
+    if (o.isLight) o.intensity *= 0.1;
+  });
+  scene.environment = pmrem.fromScene(room, 0.03).texture;
+}
+
+// Key light (the only shadow caster), cool rim, soft fill.
+const key = new THREE.SpotLight(0xfff4e8, 3.6, 0, 0.62, 0.85, 0);
+key.position.set(3.2, 5.2, 2.8);
+key.target.position.set(0, 0.4, 0);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.near = 2; key.shadow.camera.far = 14;
+key.shadow.bias = -0.00015; key.shadow.normalBias = 0.02; key.shadow.radius = 4;
+scene.add(key, key.target);
+// Rim is a narrow spot aimed at the bike so it doesn't glaze the floor in front of the camera.
+const rim = new THREE.SpotLight(0x9cc0ff, 4.2, 0, 0.3, 0.7, 0);
+rim.position.set(-3.2, 3.0, -3.8);
+rim.target.position.set(0, 0.62, 0);
+scene.add(rim, rim.target);
+const fill = new THREE.DirectionalLight(0xdfe8ff, 0.55);
+fill.position.set(-3, 1.6, 2.6);
+scene.add(fill);
+scene.add(new THREE.HemisphereLight(0x8fa6d6, 0x2a3346, 0.3)); // cool bounce keeps the underside readable when orbiting below
+
+// Dark glossy floor.
+const floor = new THREE.Mesh(
+  new THREE.CircleGeometry(16, 96),
+  new THREE.MeshPhysicalMaterial({ color: lin([0.022, 0.024, 0.03]), roughness: 0.55, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.22, envMapIntensity: 0.3 })
+);
+// Glossy but glare-free: the floor keeps diffuse light, shadows and environment reflections,
+// and drops direct-light specular (which otherwise paints broad sheens toward the camera).
+floor.material.onBeforeCompile = (sh) => {
+  sh.fragmentShader = sh.fragmentShader.replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
+  reflectedLight.directSpecular = vec3(0.0);
+  #ifdef USE_CLEARCOAT
+    clearcoatSpecularDirect = vec3(0.0);
+  #endif`);
+};
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+scene.add(floor);
+
+// Soft contact shadow (baked blob), fades out as the bike comes apart.
+const contact = (() => {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 128;
+  const g = c.getContext('2d');
+  const blob = (x, y, rx, ry, a) => {
+    g.save(); g.translate(x, y); g.scale(rx, ry);
+    const grd = g.createRadialGradient(0, 0, 0, 0, 0, 1);
+    grd.addColorStop(0, `rgba(0,0,0,${a})`); grd.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = grd; g.beginPath(); g.arc(0, 0, 1, 0, Math.PI * 2); g.fill(); g.restore();
+  };
+  blob(128, 64, 120, 34, 0.75);
+  blob(38, 64, 30, 12, 0.9); blob(218, 64, 30, 12, 0.9);
+  const tex = new THREE.CanvasTexture(c);
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 0.9), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
+  m.rotation.x = -Math.PI / 2; m.position.y = 0.002; m.renderOrder = -1;
+  scene.add(m);
+  return m;
+})();
+
+// Thin vertical LED strips in the background.
+{
+  const stripMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0.85, 0.93, 1).multiplyScalar(1.6) });
+  const geo = new THREE.CylinderGeometry(0.009, 0.009, 2.2, 8);
+  for (const deg of [172, -160, -134, -110, -88]) { // behind the bike from the default view
+    const a = THREE.MathUtils.degToRad(deg), r = 5.6;
+    const s = new THREE.Mesh(geo, stripMat);
+    s.position.set(Math.cos(a) * r, 1.3, Math.sin(a) * r);
+    scene.add(s);
+  }
+}
+
+// Post: bloom only catches things brighter than white (LEDs, strips).
+const composer = new EffectComposer(renderer);
+composer.setPixelRatio(renderer.getPixelRatio());
+composer.setSize(innerWidth, innerHeight);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth / 2, innerHeight / 2), 0.26, 0.4, 1.1);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 0.3;
+controls.maxDistance = 22;
+controls.minPolarAngle = 0;          // full orbit: over the top...
+controls.maxPolarAngle = Math.PI;    // ...and underneath (the floor is one-sided, so it vanishes from below)
+controls.zoomToCursor = true;        // scroll zooms toward whatever is under the pointer
+controls.screenSpacePanning = true;
+controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+controls.autoRotateSpeed = 0.55;
+controls.target.set(0, 0.52, 0);
+
+/* ---------------------------------------------------------------------
+   Material enhancement: livery, grain, weave, rim/hover glow
+   --------------------------------------------------------------------- */
+const G = { uBikeRim: { value: 0 }, uRimColor: { value: new THREE.Vector3(0.22, 0.42, 1.0) } };
+
+const GLSL_COMMON = /* glsl */`
+uniform float uBikeRim; uniform vec3 uRimColor; uniform float uHi; uniform vec3 uHiColor;
+float enhSS(float e0, float e1, float x) { float t = clamp((x - e0) / (e1 - e0), 0.0, 1.0); return t * t * (3.0 - 2.0 * t); }
+float enhHash(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+float enhNoise(vec3 x) {
+  vec3 i = floor(x); vec3 f = fract(x); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(mix(enhHash(i), enhHash(i + vec3(1,0,0)), f.x), mix(enhHash(i + vec3(0,1,0)), enhHash(i + vec3(1,1,0)), f.x), f.y),
+             mix(mix(enhHash(i + vec3(0,0,1)), enhHash(i + vec3(1,0,1)), f.x), mix(enhHash(i + vec3(0,1,1)), enhHash(i + vec3(1,1,1)), f.x), f.y), f.z);
+}
+vec3 enhPerturb(vec3 surfPos, vec3 n, float h, float faceDir) {
+  vec3 sx = dFdx(surfPos); vec3 sy = dFdy(surfPos);
+  vec3 r1 = cross(sy, n); vec3 r2 = cross(n, sx);
+  float det = dot(sx, r1) * faceDir;
+  vec3 grad = sign(det) * (dFdx(h) * r1 + dFdy(h) * r2);
+  return normalize(abs(det) * n - grad);
+}
+`;
+
+function enhance(mat, o) {
+  const obj = !!(o.grain || o.weave);
+  mat.userData.enh = o;
+  mat._u = {
+    uHi: { value: o.hi || 0 },
+    uHiColor: { value: o.hiColor || new THREE.Vector3(0.25, 0.5, 1.0) },
+    uGrain: { value: new THREE.Vector2(...(o.grain || [0, 0])) },
+    uWeave: { value: o.weave || 0 },
+    uPaintBlue: { value: new THREE.Vector3(0.004, 0.03, 0.36) },
+    uPaintWhite: { value: new THREE.Vector3(0.82, 0.84, 0.87) },
+    uPaintBlack: { value: new THREE.Vector3(0.012, 0.012, 0.013) },
+  };
+  const keyStr = 'enh' + (o.paint ? 'P' : '') + (o.grain ? 'G' : '') + (o.weave ? 'W' : '');
+  mat.customProgramCacheKey = () => keyStr;
+  mat.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, G, mat._u);
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', `#include <common>
+${o.paint ? 'attribute vec3 apos; varying vec3 vApos;' : ''}
+${obj ? 'varying vec3 vEnhObj; varying vec3 vEnhObjN;' : ''}`)
+      .replace('#include <begin_vertex>', `#include <begin_vertex>
+${o.paint ? 'vApos = apos;' : ''}
+${obj ? 'vEnhObj = position; vEnhObjN = objectNormal;' : ''}`);
+
+    let fs = sh.fragmentShader.replace('#include <common>', `#include <common>
+${GLSL_COMMON}
+${o.paint ? 'varying vec3 vApos; uniform vec3 uPaintBlue; uniform vec3 uPaintWhite; uniform vec3 uPaintBlack;' : ''}
+${obj ? 'varying vec3 vEnhObj; varying vec3 vEnhObjN; uniform vec2 uGrain; uniform float uWeave;' : ''}`);
+
+    if (o.paint) {
+      // Livery, ported node-for-node from the Blender "Paint" shader. vApos is the
+      // assembled position in Blender coordinates (X forward, Y left, Z up).
+      fs = fs.replace('#include <color_fragment>', `#include <color_fragment>
+      float enhWhite = 0.0, enhBlack = 0.0;
+      {
+        float X = vApos.x, Z = vApos.z;
+        float aw = max(0.0025, fwidth(Z) * 0.8);
+        float m0 = X * -0.36 + 0.5472;                         // swoosh lower edge, rising to the rear
+        float m1 = m0 + mix(0.097, 0.012, enhSS(0.05, 0.62, X)); // tapering thickness
+        float band = enhSS(m0 - aw, m0 + aw, Z) * (1.0 - enhSS(m1 - aw, m1 + aw, Z)) * enhSS(-0.1, -0.05, X);
+        float e = enhSS(-0.34, -0.955, X) * 0.173 + 0.83;       // tail top panel edge
+        float band2 = enhSS(e - 0.047 - aw, e - 0.047 + aw, Z) * (1.0 - enhSS(-0.42, -0.38, X));
+        enhWhite = max(band, band2);
+        enhBlack = 1.0 - enhSS(0.266 - aw, 0.266 + aw, Z);      // black below ~0.27 m
+        diffuseColor.rgb = mix(mix(uPaintBlue, uPaintWhite, enhWhite), uPaintBlack, enhBlack);
+      }`)
+      .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+      roughnessFactor = mix(0.32, 0.55, enhBlack);`)
+      .replace('#include <metalnessmap_fragment>', `#include <metalnessmap_fragment>
+      metalnessFactor = mix(mix(0.55, 0.05, enhWhite), 0.0, enhBlack);`)
+      .replace('#include <lights_physical_fragment>', `#include <lights_physical_fragment>
+      #ifdef USE_CLEARCOAT
+        material.clearcoat *= mix(1.0, 0.15, enhBlack);
+      #endif`);
+    }
+    if (o.weave) {
+      fs = fs.replace('#include <color_fragment>', `#include <color_fragment>
+      float enhWeaveH = 0.0;
+      {
+        vec3 an = abs(normalize(vEnhObjN));
+        vec2 uv = (an.x > an.y && an.x > an.z) ? vEnhObj.yz : ((an.y > an.z) ? vEnhObj.xz : vEnhObj.xy);
+        vec2 w = uv * uWeave; vec2 cell = floor(w); vec2 f = fract(w);
+        float twill = mod(cell.x + floor(cell.y * 0.5) * 2.0 + cell.y, 2.0);
+        float fib = twill > 0.5 ? f.x : f.y;
+        float fade = 1.0 - smoothstep(0.35, 0.9, length(fwidth(w)));
+        float tone = mix(0.5, 1.35, twill) * (0.75 + 0.25 * sin(fib * 3.14159));
+        diffuseColor.rgb *= mix(1.0, tone, fade);
+        enhWeaveH = sin(fib * 3.14159) * 0.00025 * fade;
+      }`)
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+      normal = enhPerturb(-vViewPosition, normal, enhWeaveH, faceDirection);`);
+    }
+    if (o.grain) {
+      fs = fs.replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+      {
+        vec3 gp = vEnhObj * uGrain.x;
+        float fade = 1.0 - smoothstep(0.45, 1.2, length(fwidth(gp)));
+        float h = (enhNoise(gp) + 0.5 * enhNoise(gp * 2.3)) * uGrain.y * fade;
+        normal = enhPerturb(-vViewPosition, normal, h, faceDirection);
+      }`);
+    }
+    // Rim glow for "the bike is clickable" and per-part hover/selection tint.
+    fs = fs.replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
+    {
+      float enhF = pow(1.0 - clamp(abs(dot(normal, normalize(vViewPosition))), 0.0, 1.0), 3.0);
+      totalEmissiveRadiance += uRimColor * (enhF * uBikeRim * 0.8) + uHiColor * (uHi * (0.08 + 1.5 * enhF));
+    }`);
+    sh.fragmentShader = fs;
+  };
+  return mat;
+}
+
+function makeMaterial(name) {
+  const d = MATDEF[name] || MATDEF.Plastic;
+  const m = new THREE.MeshPhysicalMaterial({
+    name, color: lin(d.c), metalness: d.m ?? 0, roughness: d.r ?? 0.5, envMapIntensity: d.env ?? 1,
+  });
+  if (d.cc) { m.clearcoat = d.cc; m.clearcoatRoughness = d.ccr ?? 0.05; }
+  if (d.em) { m.emissive = lin(d.em); m.emissiveIntensity = d.ei; }
+  if (d.tr) { m.transmission = d.tr; m.thickness = d.th; m.ior = 1.5; }
+  if (d.iri) { m.iridescence = d.iri; m.iridescenceIOR = 1.8; m.iridescenceThicknessRange = [260, 560]; }
+  if (d.sheen) { m.sheen = d.sheen; m.sheenRoughness = 0.6; m.sheenColor = lin([0.06, 0.06, 0.07]); }
+  return enhance(m, { paint: !!d.paint, grain: d.grain, weave: d.weave });
+}
+
+// Variants share the base program (same cache key), only uniforms differ.
+const variantCache = new Map();
+const HI = {
+  hover: { hi: 0.9, hiColor: new THREE.Vector3(0.18, 0.4, 1.0) },
+  selected: { hi: 0.45, hiColor: new THREE.Vector3(1.0, 0.62, 0.22) },
+};
+function variant(base, kind) {
+  if (kind === 'base') return base;
+  const k = base.uuid + kind;
+  let v = variantCache.get(k);
+  if (!v) {
+    v = base.clone();
+    enhance(v, { ...base.userData.enh, ...HI[kind] });
+    variantCache.set(k, v);
+  }
+  return v;
+}
+const ghostMat = enhance(new THREE.MeshStandardMaterial({
+  color: 0x000000, roughness: 1, metalness: 0, envMapIntensity: 0,
+  emissive: lin([0.006, 0.014, 0.05]), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+}), { hi: 1, hiColor: new THREE.Vector3(0.05, 0.14, 0.5) });
+
+/* ---------------------------------------------------------------------
+   Parts
+   --------------------------------------------------------------------- */
+const parts = [];          // every exploded object
+const byName = new Map();  // object name / corrected name -> part
+const byBase = new Map();  // base key -> [parts]
+const bikeRoot = new THREE.Group();
+scene.add(bikeRoot);
+let assembledBox, explodedBox, showcaseCenter, assembledPts, explodedPts;
+
+function hashStr(s) { let h = 2166136261; for (const ch of s) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+function parseName(raw) {
+  let n = NAME_FIX[raw] || raw;
+  const full = n;
+  let side = null;
+  const m = n.match(/_(L|R)(?=_|$)/);
+  if (m) { side = m[1]; n = n.slice(0, m.index) + n.slice(m.index + 2); }
+  let num = null;
+  const mm = n.match(/^(.*?[A-Za-z])(\d+)$/);
+  let base = n;
+  if (mm) { base = mm[1]; num = +mm[2]; }
+  return { full, sideKey: n, base, side, num };
+}
+function autoName(base) {
+  return base.split('_').map((w) => w.replace(/([a-z])([A-Z])/g, '$1 $2')).join(' ').toLowerCase().replace(/^./, (c) => c.toUpperCase());
+}
+
+function setupParts(gltfScene) {
+  gltfScene.updateMatrixWorld(true);
+  const matCache = new Map();
+  const getMat = (name) => { if (!matCache.has(name)) matCache.set(name, makeMaterial(name)); return matCache.get(name); };
+  const nodes = [...gltfScene.children];
+  const numbered = new Map();
+
+  for (const node of nodes) {
+    const ud = node.userData || {};
+    const info = parseName(node.name);
+    const group = ud.group && GROUPS[ud.group] ? ud.group : 'engine';
+    const meshes = [];
+    node.traverse((o) => { if (o.isMesh) meshes.push(o); });
+    for (const mesh of meshes) {
+      const srcMat = mesh.material;
+      const matName = (srcMat && srcMat.name) || 'Plastic';
+      const mat = getMat(MATDEF[matName] ? matName : 'Plastic');
+      if (mat.userData.enh.paint) {
+        // Capture each vertex's assembled world position (Blender axes) for the livery.
+        const pos = mesh.geometry.attributes.position;
+        const arr = new Float32Array(pos.count * 3);
+        const v = new THREE.Vector3();
+        for (let i = 0; i < pos.count; i++) {
+          v.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld);
+          arr[i * 3] = v.x; arr[i * 3 + 1] = -v.z; arr[i * 3 + 2] = v.y;
+        }
+        mesh.geometry.setAttribute('apos', new THREE.BufferAttribute(arr, 3));
+      }
+      if (srcMat && srcMat !== mat) srcMat.dispose?.();
+      mesh.material = mat;
+      mesh.userData.baseMat = mat;
+      mesh.userData.matName = matName;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+    }
+    const off = ud.exploded_off || [0, 0, 0];
+    const fix = OFFSET_FIX[node.name] || [1, 1, 1];
+    const bx = off[0] * fix[0], by = off[1] * fix[1], bz = off[2] * fix[2];
+    const [system0, stage] = GROUPS[group];
+    const r = rng(hashStr(node.name));
+    // Deterministic small tumble; wheels, discs and sprockets spin about their axle instead.
+    let axis, angle;
+    const spins = /Wheel_(Rim|Tire|Spokes|Hub)|Disc|Sprocket/.test(node.name);
+    if (spins) { axis = new THREE.Vector3(0, 0, 1); angle = (r() < 0.5 ? -1 : 1) * THREE.MathUtils.degToRad(18 + r() * 20); }
+    else {
+      axis = new THREE.Vector3(r() - 0.5, r() - 0.5, r() - 0.5).normalize();
+      angle = THREE.MathUtils.degToRad([13, 10, 7, 3][stage]) * (0.4 + 0.6 * r());
+    }
+    const part = {
+      name: node.name, info, group, stage, obj: node, meshes,
+      basePos: node.position.clone(), baseQuat: node.quaternion.clone(),
+      off: new THREE.Vector3(bx, bz, -by), // Blender Z-up -> three Y-up
+      rotQ: new THREE.Quaternion().setFromAxisAngle(axis, angle),
+      start: stage * 0.16 + r() * 0.04, dur: 0.48,
+      matName: meshes[0]?.userData.matName || 'Plastic',
+    };
+    parts.push(part);
+    byName.set(node.name, part); byName.set(info.full, part);
+    for (const k of new Set([info.sideKey, info.base])) {
+      if (!byBase.has(k)) byBase.set(k, []);
+      byBase.get(k).push(part);
+    }
+    if (info.num !== null) {
+      const k = info.base + '|' + (info.side || '');
+      numbered.set(k, Math.min(numbered.get(k) ?? 99, info.num));
+    }
+    bikeRoot.add(node);
+  }
+
+  // Resolve display data.
+  for (const p of parts) {
+    const { full, sideKey, base, side, num } = p.info;
+    const entry = PARTS[full] || PARTS[sideKey] || PARTS[base];
+    const gi = GROUP_INFO[p.group];
+    const sysFallback = GROUPS[p.group][0];
+    let name = entry?.displayName || autoName(base);
+    if (num !== null) name += ' ' + (num + (numbered.get(base + '|' + (side || '')) === 0 ? 1 : 0));
+    if (side) name += side === 'L' ? ' · left' : ' · right';
+    p.display = {
+      displayName: name,
+      system: entry?.system || gi.system || sysFallback,
+      material: entry?.material || MAT_LABEL[p.matName] || 'Mixed materials',
+      whatItIs: entry?.whatItIs || gi.whatItIs,
+      function: entry?.function || gi.function,
+      connectsTo: (entry?.connectsTo || gi.connectsTo || []),
+      fact: entry?.fact || '',
+      specific: !!entry,
+    };
+    p.searchText = (name + ' ' + p.display.system + ' ' + p.display.material + ' ' + p.group + ' ' + p.name).toLowerCase();
+  }
+  // Order-dependent bounds.
+  bikeRoot.updateMatrixWorld(true);
+  assembledBox = new THREE.Box3().setFromObject(bikeRoot);
+  assembledPts = partCorners();
+  setExplode(1, true);
+  explodedBox = new THREE.Box3().setFromObject(bikeRoot);
+  explodedPts = partCorners();
+  setExplode(0, true);
+  showcaseCenter = assembledBox.getCenter(new THREE.Vector3());
+}
+
+// Corners of every part's own box: a much tighter fit than the whole-bike AABB.
+function partCorners() {
+  const pts = [], b = new THREE.Box3();
+  for (const p of parts) {
+    b.setFromObject(p.obj);
+    for (let i = 0; i < 8; i++) pts.push(new THREE.Vector3(i & 1 ? b.max.x : b.min.x, i & 2 ? b.max.y : b.min.y, i & 4 ? b.max.z : b.min.z));
+  }
+  return pts;
+}
+function boxCorners(b) {
+  const pts = [];
+  for (let i = 0; i < 8; i++) pts.push(new THREE.Vector3(i & 1 ? b.max.x : b.min.x, i & 2 ? b.max.y : b.min.y, i & 4 ? b.max.z : b.min.z));
+  return pts;
+}
+
+function resolveLink(key, from) {
+  if (byName.has(key)) return byName.get(key);
+  const list = byBase.get(key);
+  if (!list || !list.length) return null;
+  const side = from?.info.side;
+  return list.find((p) => p.info.side === side && p !== from) || list.find((p) => p !== from) || list[0];
+}
+
+/* ---------------------------------------------------------------------
+   Explode
+   --------------------------------------------------------------------- */
+let explodeP = 0, explodeTarget = 0, exploding = false;
+const EXPLODE_TIME = 3.1;
+const _q = new THREE.Quaternion();
+const slider = $('explode'), sliderOut = $('explodeOut');
+
+function setExplode(p, silent) {
+  explodeP = p;
+  for (const part of parts) {
+    const t = easeInOut(clamp01((p - part.start) / part.dur));
+    part.obj.position.copy(part.basePos).addScaledVector(part.off, t);
+    _q.identity().slerp(part.rotQ, t);
+    part.obj.quaternion.copy(part.baseQuat).multiply(_q);
+  }
+  if (silent) { bikeRoot.updateMatrixWorld(true); return; }
+  contact.material.opacity = 1 - clamp01(p * 3);
+  const pct = Math.round(p * 100);
+  slider.value = pct;
+  slider.style.setProperty('--fill', pct + '%');
+  slider.setAttribute('aria-valuetext', pct + '% apart');
+  sliderOut.textContent = pct + '%';
+}
+
+function animateExplode(target) {
+  explodeTarget = target;
+  if (reduceMotion) { setExplode(target); exploding = false; onExplodeDone(); }
+  else exploding = true;
+}
+
+/* ---------------------------------------------------------------------
+   Camera framing
+   --------------------------------------------------------------------- */
+const viewOffset = { x: 0, y: 0, tx: 0, ty: 0 };
+function insets(asShowcase = body.dataset.state === 'showcase') {
+  const w = innerWidth, h = innerHeight, phone = phoneMQ.matches;
+  const r = { l: 0, r: 0, t: 0, b: 0 };
+  const top = document.querySelector('.topbar');
+  r.t = top.offsetTop + top.offsetHeight;
+  const info = $('info'), detail = $('detail'), list = $('parts'), bar = $('explodeBar');
+  const showInfo = asShowcase;
+  if (phone) {
+    let sheet = 0;
+    if (showInfo) sheet = Math.max(sheet, info.offsetHeight);
+    if (detail.classList.contains('is-open')) sheet = Math.max(sheet, detail.offsetHeight);
+    if (list.classList.contains('is-open')) sheet = Math.max(sheet, list.offsetHeight);
+    if (!sheet && !asShowcase) sheet = h - bar.offsetTop;
+    r.b = sheet;
+  } else {
+    if (showInfo) r.l = info.offsetLeft + info.offsetWidth + 16;
+    if (list.classList.contains('is-open')) r.l = Math.max(r.l, list.offsetLeft + list.offsetWidth + 16);
+    if (detail.classList.contains('is-open')) r.r = w - detail.offsetLeft + 16;
+    r.b = h - bar.offsetTop + 8;
+  }
+  return r;
+}
+function updateViewOffsetTarget(asShowcase) {
+  const i = insets(asShowcase);
+  viewOffset.tx = -(i.l - i.r) / 2;
+  viewOffset.ty = -(i.t - i.b) / 2;
+  return i;
+}
+function applyViewOffset(k) {
+  viewOffset.x += (viewOffset.tx - viewOffset.x) * k;
+  viewOffset.y += (viewOffset.ty - viewOffset.y) * k;
+  camera.setViewOffset(innerWidth, innerHeight, viewOffset.x, viewOffset.y, innerWidth, innerHeight);
+}
+
+const _v = new THREE.Vector3();
+function fitDistance(pts, target, dir, ins, margin) {
+  const w = innerWidth, h = innerHeight;
+  const effW = Math.max(140, w - ins.l - ins.r), effH = Math.max(140, h - ins.t - ins.b);
+  const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
+  const tv = tanV * (effH / h) * margin, th = tanV * camera.aspect * (effW / w) * margin;
+  const f = dir.clone().normalize();
+  const right = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), f).normalize();
+  const up = new THREE.Vector3().crossVectors(f, right);
+  let d = 0;
+  for (const pt of pts) {
+    _v.copy(pt).sub(target);
+    const depth = _v.dot(f);
+    d = Math.max(d, Math.abs(_v.dot(right)) / th + depth, Math.abs(_v.dot(up)) / tv + depth);
+  }
+  return d;
+}
+function clampDir(dir, minEl, maxEl) {
+  const s = new THREE.Spherical().setFromVector3(dir);
+  s.phi = THREE.MathUtils.clamp(s.phi, Math.PI / 2 - THREE.MathUtils.degToRad(maxEl), Math.PI / 2 - THREE.MathUtils.degToRad(minEl));
+  s.radius = 1;
+  return new THREE.Vector3().setFromSpherical(s);
+}
+function currentDir() { return camera.position.clone().sub(controls.target).normalize(); }
+const DEFAULT_DIR = new THREE.Vector3(1.0, 0.36, 0.92).normalize(); // 3/4 front, right side
+
+function showcasePose(dir = DEFAULT_DIR) {
+  const ins = updateViewOffsetTarget(true); // frame for the layout we're heading to
+  const target = showcaseCenter.clone(); target.y = Math.max(0.45, target.y - 0.02);
+  const d = clampDir(dir, 10, 32);
+  const dist = fitDistance(assembledPts, target, d, ins, 0.86);
+  return { target, pos: target.clone().addScaledVector(d, dist) };
+}
+function overviewPose(dir = currentDir()) {
+  const ins = updateViewOffsetTarget();
+  const target = explodedBox.getCenter(new THREE.Vector3());
+  const d = clampDir(dir, 14, 36);
+  const dist = fitDistance(explodedPts, target, d, ins, 0.94);
+  return { target, pos: target.clone().addScaledVector(d, dist) };
+}
+function partPose(part) {
+  const ins = updateViewOffsetTarget();
+  part.obj.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(part.obj);
+  const target = box.getCenter(new THREE.Vector3());
+  let d = currentDir();
+  if (part.info.side === 'L' && d.z > 0) d.z = -d.z;   // left side is -Z in three.js
+  if (part.info.side === 'R' && d.z < 0) d.z = -d.z;
+  d = clampDir(d, 8, 48);
+  const dist = Math.max(controls.minDistance + 0.05, fitDistance(boxCorners(box), target, d, ins, 0.5));
+  return { target, pos: target.clone().addScaledVector(d, dist) };
+}
+
+let camTween = null;
+function tweenCamera(pose, dur = 1.6) {
+  if (reduceMotion || dur === 0) {
+    controls.target.copy(pose.target); camera.position.copy(pose.pos); camTween = null; return;
+  }
+  const s0 = new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target));
+  const s1 = new THREE.Spherical().setFromVector3(pose.pos.clone().sub(pose.target));
+  let dt = s1.theta - s0.theta;
+  if (dt > Math.PI) s1.theta -= Math.PI * 2; else if (dt < -Math.PI) s1.theta += Math.PI * 2;
+  camTween = { t: 0, dur, t0: controls.target.clone(), t1: pose.target.clone(), s0, s1 };
+}
+function stepCamera(dt) {
+  if (!camTween) return;
+  camTween.t = Math.min(1, camTween.t + dt / camTween.dur);
+  const k = easeInOut(camTween.t);
+  const { s0, s1 } = camTween;
+  const s = new THREE.Spherical(
+    THREE.MathUtils.lerp(s0.radius, s1.radius, k),
+    THREE.MathUtils.lerp(s0.phi, s1.phi, k),
+    THREE.MathUtils.lerp(s0.theta, s1.theta, k));
+  controls.target.lerpVectors(camTween.t0, camTween.t1, k);
+  camera.position.copy(controls.target).add(new THREE.Vector3().setFromSpherical(s));
+  if (camTween.t >= 1) camTween = null;
+}
+
+/* ---------------------------------------------------------------------
+   State, selection, hover
+   --------------------------------------------------------------------- */
+let state = 'loading';      // loading | showcase | exploding | exploded | assembling
+let selected = null, hovered = null, pendingSelect = null, bikeHover = false;
+let userInteracted = false;
+
+function setState(s) {
+  state = s;
+  body.dataset.state = s === 'showcase' ? 'showcase' : 'exploded';
+  $('toggleLbl').textContent = s === 'showcase' ? 'Disassemble' : 'Reassemble';
+  controls.autoRotate = s === 'showcase' && !userInteracted && !reduceMotion && !document.hidden;
+  if (s !== 'assembling') updateViewOffsetTarget();
+}
+function announce(msg) { $('live').textContent = msg; }
+
+function refreshMaterials() {
+  for (const p of parts) {
+    let kind = 'base';
+    if (selected) kind = p === selected ? 'selected' : 'ghost';
+    else if (p === hovered && state !== 'showcase') kind = 'hover';
+    for (const m of p.meshes) {
+      m.material = kind === 'ghost' ? ghostMat : variant(m.userData.baseMat, kind);
+      m.castShadow = kind !== 'ghost';
+    }
+  }
+}
+
+function disassemble() {
+  if (state === 'exploded' || state === 'exploding') return;
+  userInteracted = true;
+  setState('exploding');
+  animateExplode(1);
+  tweenCamera(overviewPose(), EXPLODE_TIME * 0.9);
+  announce('Disassembling the bike');
+}
+function reassemble() {
+  if (state === 'showcase' || state === 'loading') return;
+  deselect(false);
+  closeParts();
+  setState('assembling');
+  animateExplode(0);
+  tweenCamera(showcasePose(currentDir()), EXPLODE_TIME * 0.9);
+  announce('Reassembling the bike');
+}
+function onExplodeDone() {
+  if (explodeTarget === 1) {
+    setState('exploded');
+    announce('Bike disassembled. Select a part to learn about it.');
+    if (pendingSelect) { const p = pendingSelect; pendingSelect = null; select(p); }
+  } else {
+    userInteracted = false;
+    setState('showcase');
+    announce('Bike reassembled');
+  }
+}
+
+let lastFocus = null;
+function select(part, opts = {}) {
+  if (!part) return;
+  if (state === 'showcase' || state === 'assembling') { pendingSelect = part; disassemble(); return; }
+  if (state === 'exploding') { pendingSelect = part; return; }
+  selected = part;
+  body.dataset.selected = '';
+  refreshMaterials();
+  renderDetail(part);
+  const d = $('detail');
+  d.classList.add('is-open'); d.setAttribute('aria-hidden', 'false');
+  if (phoneMQ.matches) closeParts();
+  markListCurrent();
+  tweenCamera(partPose(part), 1.3);
+  announce('Selected ' + part.display.displayName);
+  if (opts.focus !== false) {
+    lastFocus = opts.returnFocus || document.activeElement;
+    setTimeout(() => $('detailName').focus({ preventScroll: true }), 30);
+  }
+}
+function deselect(moveCamera = true) {
+  if (!selected) return;
+  selected = null;
+  delete body.dataset.selected;
+  refreshMaterials();
+  const d = $('detail');
+  d.classList.remove('is-open'); d.setAttribute('aria-hidden', 'true');
+  markListCurrent();
+  if (moveCamera && state === 'exploded') tweenCamera(overviewPose(), 1.3);
+  if (lastFocus && document.contains(lastFocus) && lastFocus !== document.body) lastFocus.focus({ preventScroll: true });
+  lastFocus = null;
+}
+
+function renderDetail(p) {
+  const d = p.display;
+  $('detailSys').textContent = d.system;
+  $('detailName').textContent = d.displayName;
+  const links = [];
+  const seen = new Set();
+  for (const k of d.connectsTo) {
+    const t = resolveLink(k, p);
+    if (t && t !== p && !seen.has(t)) { seen.add(t); links.push(t); }
+  }
+  $('detailBody').innerHTML = `
+    <dl class="facts">
+      <dt>System</dt><dd>${esc(d.system)}</dd>
+      <dt>Finish</dt><dd>${esc(d.material)}</dd>
+      <dt>Object</dt><dd style="font-family:var(--mono);font-size:12px;color:var(--muted)">${esc(p.name)}</dd>
+    </dl>
+    <h3>What it is</h3><p>${esc(d.whatItIs)}</p>
+    <h3>What it does on the bike</h3><p>${esc(d.function)}</p>
+    ${links.length ? `<h3>Connects to</h3><ul class="links">${links.map((t) => `<li><button type="button" data-part="${esc(t.name)}">${esc(t.display.displayName)}<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 9 9 3M4 3h5v5"/></svg></button></li>`).join('')}</ul>` : ''}
+    ${d.fact ? `<aside class="fact"><b>Worth knowing</b><p>${esc(d.fact)}</p></aside>` : ''}`;
+  $('detailBody').scrollTop = 0;
+}
+
+function setHover(part) {
+  if (hovered === part) return;
+  hovered = part;
+  if (!selected) refreshMaterials();
+}
+
+/* ---------------------------------------------------------------------
+   Parts list
+   --------------------------------------------------------------------- */
+function buildList() {
+  const q = $('partSearch').value.trim().toLowerCase();
+  const bySys = new Map(SYSTEM_ORDER.map((s) => [s, []]));
+  for (const p of parts) {
+    if (q && !q.split(/\s+/).every((w) => p.searchText.includes(w))) continue;
+    if (!bySys.has(p.display.system)) bySys.set(p.display.system, []);
+    bySys.get(p.display.system).push(p);
+  }
+  let html = '', total = 0;
+  for (const [sys, list] of bySys) {
+    if (!list.length) continue;
+    total += list.length;
+    list.sort((a, b) => a.display.displayName.localeCompare(b.display.displayName, 'en', { numeric: true }));
+    html += `<section><h3>${esc(sys)} <span>${list.length}</span></h3><ul>${list.map((p) =>
+      `<li><button type="button" data-part="${esc(p.name)}">${esc(p.display.displayName)}</button></li>`).join('')}</ul></section>`;
+  }
+  $('partsList').innerHTML = html || `<p class="parts-empty">No parts match “${esc(q)}”.</p>`;
+  $('partsCount').textContent = q ? `${total} of ${parts.length}` : `${parts.length}`;
+  markListCurrent();
+}
+function markListCurrent() {
+  for (const b of $('partsList').querySelectorAll('button[data-part]')) {
+    b.setAttribute('aria-current', selected && b.dataset.part === selected.name ? 'true' : 'false');
+  }
+}
+function openParts() {
+  const el = $('parts');
+  el.classList.add('is-open'); el.setAttribute('aria-hidden', 'false');
+  $('partsBtn').setAttribute('aria-expanded', 'true');
+  body.dataset.partsOpen = '';
+  if (phoneMQ.matches && selected) { const d = $('detail'); d.classList.remove('is-open'); }
+  setTimeout(() => $('partSearch').focus({ preventScroll: true }), 50);
+  updateViewOffsetTarget();
+}
+function closeParts() {
+  const el = $('parts');
+  if (!el.classList.contains('is-open')) return;
+  el.classList.remove('is-open'); el.setAttribute('aria-hidden', 'true');
+  $('partsBtn').setAttribute('aria-expanded', 'false');
+  delete body.dataset.partsOpen;
+  if (phoneMQ.matches && selected) $('detail').classList.add('is-open');
+  updateViewOffsetTarget();
+}
+
+/* ---------------------------------------------------------------------
+   Exploded-view labels: key parts get a callout that fades in as the
+   part separates. For left/right pairs, the side facing the camera is labelled.
+   --------------------------------------------------------------------- */
+const LABEL_KEYS = [
+  'Fairing_Nose', 'Windscreen', 'FuelTank', 'Seat', 'TailCowl', 'Fairing_Side', 'Fairing_Lower', 'BellyPan',
+  'FrontFender', 'Headlight', 'Dash', 'TailLight', 'FrameSpar', 'Swingarm', 'Shock_Spring', 'Fork_Outer',
+  'TripleClamp_Top', 'Engine_Head', 'Engine_Crankcase', 'Engine_ClutchCover', 'Engine_AltCover', 'Radiator_Core',
+  'Airbox', 'Exhaust_Muffler', 'Exhaust_Header', 'FrontWheel_Tire', 'RearWheel_Tire', 'FrontDisc', 'FrontCaliper',
+  'RearDisc', 'Chain', 'RearSprocket', 'ClipOn_Bar', 'FootPeg', 'SubFrame_Top',
+];
+const LABEL_TEXT = { Exhaust_Header: 'Exhaust headers', Fork_Outer: 'Upside-down fork', FrameSpar: 'Twin-spar frame', ClipOn_Bar: 'Clip-on bar', Shock_Spring: 'Rear shock' };
+let labelsOn = true;
+const labelItems = [];
+const labelLayer = $('labels'), labelSvg = labelLayer.querySelector('svg');
+const SVGNS = 'http://www.w3.org/2000/svg';
+
+function buildLabels() {
+  const box = new THREE.Box3();
+  for (const p of parts) {
+    box.setFromObject(p.obj);
+    p.anchor = p.obj.worldToLocal(box.getCenter(new THREE.Vector3()));
+  }
+  for (const key of LABEL_KEYS) {
+    const list = byBase.get(key) || (byName.get(key) ? [byName.get(key)] : null);
+    if (!list) continue;
+    const el = document.createElement('button');
+    el.type = 'button'; el.className = 'plabel'; el.tabIndex = -1; el.hidden = true;
+    el.textContent = LABEL_TEXT[key] || PARTS[key]?.displayName || list[0].display.displayName;
+    const line = document.createElementNS(SVGNS, 'line');
+    const dot = document.createElementNS(SVGNS, 'circle'); dot.setAttribute('r', '2.5');
+    labelSvg.append(line, dot);
+    labelLayer.appendChild(el);
+    const item = { list, el, line, dot, w: 0, h: 0, part: list[0] };
+    el.addEventListener('click', () => select(item.part, { focus: false }));
+    el.addEventListener('pointerenter', () => { if (state === 'exploded' && !selected) setHover(item.part); });
+    el.addEventListener('pointerleave', () => { if (!selected) setHover(null); });
+    labelItems.push(item);
+  }
+}
+
+const _lp = new THREE.Vector3(), _lc = new THREE.Vector3();
+function updateLabels() {
+  const show = labelsOn && !selected && explodeP > 0.02 && state !== 'loading' && state !== 'showcase';
+  labelLayer.classList.toggle('show', show);
+  if (!show) return;
+  const w = innerWidth, h = innerHeight, ins = insets();
+  // Labels push outward from the screen-space centre of the (partly) exploded bike.
+  _lc.lerpVectors(showcaseCenter, explodedBox.getCenter(_lp), explodeP).project(camera);
+  const cx = (_lc.x + 1) / 2 * w, cy = (1 - _lc.y) / 2 * h;
+  const placed = [];
+  for (const it of labelItems) {
+    let best = it.list[0], bd = Infinity;
+    for (const p of it.list) {
+      _lp.copy(p.anchor).applyMatrix4(p.obj.matrixWorld);
+      const d = _lp.distanceToSquared(camera.position);
+      if (d < bd) { bd = d; best = p; }
+    }
+    it.part = best;
+    const t = easeInOut(clamp01((explodeP - best.start) / best.dur));
+    const alpha = THREE.MathUtils.smoothstep(t, 0.45, 0.95);
+    _lp.copy(best.anchor).applyMatrix4(best.obj.matrixWorld).project(camera);
+    let visible = alpha > 0.02 && _lp.z < 1;
+    if (visible) {
+      const sx = (_lp.x + 1) / 2 * w, sy = (1 - _lp.y) / 2 * h;
+      if (!it.w) { it.el.hidden = false; it.w = it.el.offsetWidth; it.h = it.el.offsetHeight; }
+      let dx = sx - cx, dy = sy - cy;
+      const len = Math.hypot(dx, dy) || 1; dx /= len; dy /= len;
+      const reach = 30 + 18 * Math.abs(dy);
+      const ex = sx + dx * reach, ey = sy + dy * reach;
+      const lx = dx >= 0 ? ex + 4 : ex - it.w - 4, ly = ey - it.h / 2;
+      const r = { x: lx - 3, y: ly - 3, x2: lx + it.w + 3, y2: ly + it.h + 3 };
+      if (r.x < ins.l + 4 || r.x2 > w - ins.r - 4 || r.y < ins.t + 4 || r.y2 > h - ins.b - 4) visible = false;
+      else if (alpha > 0.3 && placed.some((q) => r.x < q.x2 && r.x2 > q.x && r.y < q.y2 && r.y2 > q.y)) visible = false;
+      if (visible) {
+        if (alpha > 0.3) placed.push(r);
+        it.el.style.transform = `translate(${lx.toFixed(1)}px, ${ly.toFixed(1)}px)`;
+        it.el.style.opacity = alpha;
+        it.line.setAttribute('x1', sx); it.line.setAttribute('y1', sy);
+        it.line.setAttribute('x2', ex); it.line.setAttribute('y2', ey);
+        it.dot.setAttribute('cx', sx); it.dot.setAttribute('cy', sy);
+        it.line.style.opacity = it.dot.style.opacity = alpha;
+      }
+    }
+    it.el.hidden = !visible;
+    it.line.style.display = it.dot.style.display = visible ? '' : 'none';
+  }
+}
+$('labelsBtn').addEventListener('click', () => {
+  labelsOn = !labelsOn;
+  $('labelsBtn').setAttribute('aria-pressed', String(labelsOn));
+});
+
+/* ---------------------------------------------------------------------
+   Input
+   --------------------------------------------------------------------- */
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+let pointerDirty = false, pointerInside = false, lastPointerType = 'mouse';
+let down = null;
+const tooltip = $('tooltip');
+
+function pickables() {
+  const out = [];
+  for (const p of parts) {
+    if (selected && p !== selected) continue; // ghosted parts are not pickable
+    for (const m of p.meshes) if (m.visible) out.push(m);
+  }
+  return out;
+}
+function pick(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  pointer.set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
+  raycaster.setFromCamera(pointer, camera);
+  const hit = raycaster.intersectObjects(pickables(), false)[0];
+  if (!hit) return null;
+  let o = hit.object;
+  while (o && !byName.has(o.name)) o = o.parent;
+  return o ? byName.get(o.name) : null;
+}
+
+let pX = 0, pY = 0;
+canvas.addEventListener('pointermove', (e) => {
+  lastPointerType = e.pointerType;
+  pX = e.clientX; pY = e.clientY; pointerInside = true;
+  if (e.pointerType === 'mouse') pointerDirty = true;
+});
+canvas.addEventListener('dblclick', () => {
+  if (state === 'showcase') tweenCamera(showcasePose(), 1.2);
+  else if (state === 'exploded') tweenCamera(selected ? partPose(selected) : overviewPose(DEFAULT_DIR), 1.2);
+});
+canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+canvas.addEventListener('pointerleave', () => { pointerInside = false; pointerDirty = true; });
+canvas.addEventListener('pointerdown', (e) => {
+  down = { x: e.clientX, y: e.clientY };
+  body.classList.add('dragging');           // orbit drags must not select page text
+  getSelection()?.removeAllRanges();
+});
+addEventListener('pointerup', () => body.classList.remove('dragging'));
+addEventListener('pointercancel', () => body.classList.remove('dragging'));
+canvas.addEventListener('pointerup', (e) => {
+  if (!down) return;
+  const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y);
+  down = null;
+  if (moved > 6 || state === 'loading') return; // a drag orbits; a still press-and-release is a click
+  const part = pick(e.clientX, e.clientY);
+  if (state === 'showcase') { if (part) disassemble(); return; }
+  if (state !== 'exploded') return;
+  if (part) { if (part !== selected) select(part, { focus: false }); }
+  else if (selected) deselect();
+});
+
+function updateHover() {
+  if (!pointerDirty) return;
+  pointerDirty = false;
+  let part = null;
+  if (pointerInside && lastPointerType === 'mouse' && !camTween && (state === 'showcase' || state === 'exploded')) part = pick(pX, pY);
+  bikeHover = state === 'showcase' && !!part;
+  const hp = state === 'exploded' ? part : null;
+  setHover(selected ? null : hp);
+  canvas.classList.toggle('pointer', !!part && !(selected && part === selected));
+  if (part && state === 'exploded' && !(selected && part === selected)) {
+    tooltip.innerHTML = `${esc(part.display.displayName)}<small>${esc(part.display.system)}</small>`;
+    tooltip.style.transform = `translate(${Math.min(pX + 16, innerWidth - tooltip.offsetWidth - 8)}px, ${pY + 18}px)`;
+    tooltip.classList.add('show');
+  } else if (part && state === 'showcase') {
+    tooltip.innerHTML = `Harrow 1000S<small>Click to take it apart</small>`;
+    tooltip.style.transform = `translate(${Math.min(pX + 16, innerWidth - tooltip.offsetWidth - 8)}px, ${pY + 18}px)`;
+    tooltip.classList.add('show');
+  } else tooltip.classList.remove('show');
+}
+
+controls.addEventListener('start', () => {
+  userInteracted = true;
+  controls.autoRotate = false;
+  camTween = null;
+});
+
+$('toggleBtn').addEventListener('click', () => (state === 'showcase' ? disassemble() : reassemble()));
+for (const b of document.querySelectorAll('[data-action="reassemble"]')) b.addEventListener('click', reassemble);
+$('partsBtn').addEventListener('click', () => ($('parts').classList.contains('is-open') ? closeParts() : openParts()));
+$('partsClose').addEventListener('click', () => { closeParts(); $('partsBtn').focus(); });
+$('detailClose').addEventListener('click', () => deselect());
+$('detailBack').addEventListener('click', () => { deselect(); openParts(); });
+$('partSearch').addEventListener('input', buildList);
+$('partsList').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-part]');
+  if (b) select(byName.get(b.dataset.part), { returnFocus: b });
+});
+$('partsList').addEventListener('pointerover', (e) => {
+  const b = e.target.closest('button[data-part]');
+  if (b && state === 'exploded' && !selected) setHover(byName.get(b.dataset.part));
+});
+$('partsList').addEventListener('pointerleave', () => { if (!selected) setHover(null); });
+$('detailBody').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-part]');
+  if (b) select(byName.get(b.dataset.part), { returnFocus: lastFocus });
+});
+
+slider.addEventListener('input', () => {
+  if (state === 'loading') return;
+  const p = slider.value / 100;
+  exploding = false; pendingSelect = null;
+  if (selected) deselect(false);
+  userInteracted = true;
+  explodeTarget = p;
+  setExplode(p);
+  setState(p > 0 ? 'exploded' : 'showcase');
+  // keep everything in frame while scrubbing
+  camTween = null;
+  const dir = currentDir();
+  const a = showcasePose(dir), b = overviewPose(dir);
+  const k = easeInOut(p);
+  controls.target.lerpVectors(a.target, b.target, k);
+  camera.position.copy(controls.target).addScaledVector(clampDir(dir, 10, 36), THREE.MathUtils.lerp(a.pos.distanceTo(a.target), b.pos.distanceTo(b.target), k));
+});
+
+addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (selected) { deselect(); e.preventDefault(); }
+  else if ($('parts').classList.contains('is-open')) { closeParts(); $('partsBtn').focus(); e.preventDefault(); }
+});
+
+document.addEventListener('visibilitychange', () => {
+  controls.autoRotate = state === 'showcase' && !userInteracted && !reduceMotion && !document.hidden;
+});
+reduceMQ.addEventListener('change', (e) => { reduceMotion = e.matches; setState(state); });
+
+function onResize() {
+  const w = innerWidth, h = innerHeight;
+  camera.aspect = w / h;
+  camera.fov = w / h < 0.8 ? 44 : w / h < 1.2 ? 38 : 32; // wider lens in portrait so the bike fits
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+  composer.setSize(w, h);
+  bloom.resolution.set(w / 2, h / 2);
+  updateViewOffsetTarget();
+  viewOffset.x = viewOffset.tx; viewOffset.y = viewOffset.ty;
+}
+addEventListener('resize', onResize);
+
+/* ---------------------------------------------------------------------
+   Loop
+   --------------------------------------------------------------------- */
+let last = performance.now();
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (exploding) {
+    const s = dt / EXPLODE_TIME;
+    const p = explodeP < explodeTarget ? Math.min(explodeTarget, explodeP + s) : Math.max(explodeTarget, explodeP - s);
+    setExplode(p);
+    if (p === explodeTarget) { exploding = false; onExplodeDone(); }
+  }
+  stepCamera(dt);
+  updateHover();
+  G.uBikeRim.value += ((bikeHover && state === 'showcase' ? 1 : 0) - G.uBikeRim.value) * Math.min(1, dt * 10);
+  if (window.harrow.noViewOffset) camera.clearViewOffset();
+  else applyViewOffset(reduceMotion ? 1 : Math.min(1, dt * 5));
+  controls.update();
+  if (controls.target.y < 0.05) controls.target.y = 0.05;
+  const camDist = camera.position.distanceTo(controls.target);
+  scene.fog.near = camDist + 2.5; scene.fog.far = camDist + 11;
+  composer.render();
+  updateLabels();
+}
+
+/* ---------------------------------------------------------------------
+   Loading
+   --------------------------------------------------------------------- */
+function progress(frac, msg) {
+  const pct = Math.round(clamp01(frac) * 100);
+  $('loadFill').style.width = pct + '%';
+  $('loadPct').textContent = pct + '%';
+  if (msg) $('loadMsg').textContent = msg;
+}
+function fail(message, err) {
+  const l = $('loader');
+  l.classList.add('error'); l.classList.remove('done');
+  $('errorMsg').innerHTML = message;
+  $('errorDetail').textContent = err ? String(err.message || err) : '';
+  console.warn('[harrow]', err);
+}
+
+function loadGLB(url, draco) {
+  return new Promise((resolve, reject) => {
+    const loader = new GLTFLoader();
+    if (draco) {
+      const dl = new DRACOLoader();
+      dl.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/gltf/');
+      loader.setDRACOLoader(dl);
+    }
+    loader.load(url, resolve, (e) => { if (e.lengthComputable || e.total) progress(e.loaded / e.total * 0.92); }, reject);
+  });
+}
+
+async function start() {
+  if (location.protocol === 'file:') {
+    fail('Browsers won’t load 3D model files from a page opened straight from disk. Start a local server in this folder instead:<br><br><code>python -m http.server</code><br><br>then open <code>http://localhost:8000</code>.');
+    return;
+  }
+  let gltf;
+  try {
+    gltf = await loadGLB('assets/bike-draco.glb', true);
+  } catch (err) {
+    console.info('[harrow] Draco model unavailable, using uncompressed fallback:', err?.message || err);
+    progress(0, 'Loading model');
+    try {
+      gltf = await loadGLB('assets/bike.glb', false);
+    } catch (err2) {
+      fail('The model file <code>assets/bike.glb</code> couldn’t be downloaded. Check that it exists next to <code>index.html</code> (run <code>blender -b bike.blend --python export.py</code> to create it) and that you’re viewing the page through a web server.', err2);
+      return;
+    }
+  }
+  try {
+    progress(0.94, 'Preparing materials');
+    setupParts(gltf.scene);
+    buildList();
+    buildLabels();
+    setState('showcase');
+    onResize();
+    const pose = showcasePose();
+    tweenCamera(pose, 0);
+    viewOffset.x = viewOffset.tx; viewOffset.y = viewOffset.ty;
+    applyViewOffset(1);
+    // Compile every program (including hover/selected/ghost variants) up front.
+    const warm = [];
+    for (const p of parts) for (const m of p.meshes) warm.push(variant(m.userData.baseMat, 'hover'), variant(m.userData.baseMat, 'selected'));
+    const tmp = new THREE.Group();
+    [...new Set(warm), ghostMat].forEach((mat) => { const mm = new THREE.Mesh(new THREE.BoxGeometry(0.001, 0.001, 0.001), mat); mm.position.y = -5; tmp.add(mm); });
+    scene.add(tmp);
+    if (renderer.compileAsync && renderer.extensions.has('KHR_parallel_shader_compile')) await renderer.compileAsync(scene, camera);
+    else renderer.compile(scene, camera);
+    composer.render();
+    scene.remove(tmp);
+    tmp.traverse((o) => o.geometry?.dispose());
+    progress(1, 'Ready');
+    $('loader').classList.add('done');
+    requestAnimationFrame(frame);
+  } catch (err) {
+    fail('Something went wrong while preparing the 3D scene.', err);
+  }
+}
+
+// Small hook for automated checks and the console.
+window.harrow = {
+  three: { scene, camera, renderer, key, rim, fill, floor, bloom },
+  get state() { return state; }, get busy() { return !!camTween || exploding; }, get explode() { return explodeP; }, get parts() { return parts; }, get selected() { return selected?.name || null; },
+  disassemble, reassemble, select: (n) => select(byName.get(n), { focus: false }), deselect, setExplode: (p) => { slider.value = p * 100; slider.dispatchEvent(new Event('input')); },
+  audit() {
+    const issues = [];
+    for (const p of parts) {
+      const d = p.display;
+      if (!d.displayName || !d.whatItIs || !d.function || !d.material || !d.system) issues.push(p.name + ': empty field');
+      for (const k of d.connectsTo) { const t = resolveLink(k, p); if (!t) issues.push(`${p.name}: link "${k}" unresolved`); }
+      if (!d.specific) issues.push(p.name + ': using group fallback');
+    }
+    return issues;
+  },
+  drift() {
+    let max = 0;
+    for (const p of parts) max = Math.max(max, p.obj.position.distanceTo(p.basePos), 1 - Math.abs(p.obj.quaternion.dot(p.baseQuat)));
+    return max;
+  },
+};
+
+start();
+</script>
+</body>
+</html>
